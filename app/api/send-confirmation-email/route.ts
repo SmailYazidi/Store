@@ -1,22 +1,17 @@
 import { NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import clientPromise from "@/lib/mongodb"
+import nodemailer from "nodemailer"
 
-// Only import nodemailer if SMTP is configured
-let transporter: any = null
-
-if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-  const nodemailer = require("nodemailer")
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number.parseInt(process.env.SMTP_PORT || "587"),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  })
-}
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number.parseInt(process.env.SMTP_PORT || "587"),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+})
 
 export async function POST(request: Request) {
   try {
@@ -29,12 +24,6 @@ export async function POST(request: Request) {
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 })
-    }
-
-    // If email is not configured, just return success
-    if (!transporter) {
-      console.log("Email not configured, skipping email send")
-      return NextResponse.json({ message: "Email configuration not found - skipped sending" })
     }
 
     const emailHtml = `

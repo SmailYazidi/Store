@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { loadStripe } from "@stripe/stripe-js"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLanguage } from "@/app/providers"
 import { CreditCard, Loader2 } from "lucide-react"
 import Image from "next/image"
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 interface Order {
   _id: string
@@ -62,19 +65,36 @@ export function PaymentPage({ orderId }: PaymentPageProps) {
         }),
       })
 
-      const data = await response.json()
+      const { clientSecret } = await response.json()
 
-      // For development/demo purposes, simulate successful payment
-      if (data.clientSecret || data.message) {
-        // Confirm payment in database
+      const stripe = await stripePromise
+      if (!stripe) throw new Error("Stripe failed to load")
+
+      const { error } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: {
+            // This would be replaced with actual Stripe Elements
+            number: "4242424242424242",
+            exp_month: 12,
+            exp_year: 2025,
+            cvc: "123",
+          },
+          billing_details: {
+            name: order.customerName,
+            email: order.customerEmail,
+          },
+        },
+      })
+
+      if (error) {
+        console.error("Payment failed:", error)
+        alert("فشل في الدفع: " + error.message)
+      } else {
+        // Payment succeeded
         await fetch(`/api/orders/${orderId}/confirm-payment`, {
           method: "POST",
         })
-
-        // Redirect to success page
         router.push(`/order-success/${orderId}`)
-      } else {
-        alert("فشل في إنشاء عملية الدفع")
       }
     } catch (error) {
       console.error("Payment error:", error)
@@ -140,11 +160,13 @@ export function PaymentPage({ orderId }: PaymentPageProps) {
           <CardTitle>{t("paymentInfo")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="p-4 border rounded-lg bg-blue-50 border-blue-200">
-            <p className="text-sm text-blue-800 mb-2">
-              <strong>ملاحظة:</strong> هذا مثال تجريبي للدفع
-            </p>
-            <p className="text-xs text-blue-600">في التطبيق الحقيقي، ستحتاج إلى إعداد Stripe أو نظام دفع آخر</p>
+          <div className="p-4 border rounded-lg bg-muted/50">
+            <p className="text-sm text-muted-foreground mb-2">في هذا المثال، سيتم استخدام بطاقة اختبار Stripe</p>
+            <div className="space-y-2 text-sm">
+              <p>رقم البطاقة: 4242 4242 4242 4242</p>
+              <p>تاريخ الانتهاء: 12/25</p>
+              <p>CVC: 123</p>
+            </div>
           </div>
 
           <Button onClick={handlePayment} disabled={processing} className="w-full" size="lg">
@@ -160,16 +182,6 @@ export function PaymentPage({ orderId }: PaymentPageProps) {
               </>
             )}
           </Button>
-
-          <div className="text-center">
-            <Button
-              variant="outline"
-              onClick={() => router.push(`/order-success/${orderId}`)}
-              className="bg-transparent"
-            >
-              تخطي الدفع (للتجربة)
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
