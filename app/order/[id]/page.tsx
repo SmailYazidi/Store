@@ -1,18 +1,22 @@
 import { Sidebar } from "@/components/Sidebar"
 import { Header } from "@/components/Header"
-import { ProductGrid } from "@/components/ProductGrid"
-import { CategorySection } from "@/components/CategorySection"
+import { OrderForm } from "@/components/OrderForm"
 import { SidebarInset } from "@/components/ui/sidebar"
 
-export default function Home() {
+interface OrderPageProps {
+  params: {
+    id: string
+  }
+}
+
+export default function OrderPage({ params }: OrderPageProps) {
   return (
     <div className="min-h-screen flex w-full">
       <Sidebar />
       <SidebarInset className="flex-1">
         <Header />
         <main className="flex-1 p-6">
-          <CategorySection />
-          <ProductGrid />
+          <OrderForm productId={params.id} />
         </main>
       </SidebarInset>
     </div>

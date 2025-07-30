@@ -1,18 +1,22 @@
 import { Sidebar } from "@/components/Sidebar"
 import { Header } from "@/components/Header"
-import { ProductGrid } from "@/components/ProductGrid"
-import { CategorySection } from "@/components/CategorySection"
+import { PaymentPage } from "@/components/PaymentPage"
 import { SidebarInset } from "@/components/ui/sidebar"
 
-export default function Home() {
+interface PaymentPageProps {
+  params: {
+    orderId: string
+  }
+}
+
+export default function Payment({ params }: PaymentPageProps) {
   return (
     <div className="min-h-screen flex w-full">
       <Sidebar />
       <SidebarInset className="flex-1">
         <Header />
         <main className="flex-1 p-6">
-          <CategorySection />
-          <ProductGrid />
+          <PaymentPage orderId={params.orderId} />
         </main>
       </SidebarInset>
     </div>
