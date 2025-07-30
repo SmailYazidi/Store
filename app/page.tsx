@@ -1,9 +1,10 @@
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
 import { ProductGrid } from "@/components/ProductGrid"
+import { CategorySection } from "@/components/CategorySection"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
-export default function HomePage() {
+export default function Home() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -11,6 +12,7 @@ export default function HomePage() {
         <SidebarInset className="flex-1">
           <Header />
           <main className="flex-1 p-4 md:p-6">
+            <CategorySection />
             <ProductGrid />
           </main>
         </SidebarInset>

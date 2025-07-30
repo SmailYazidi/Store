@@ -1,14 +1,16 @@
 import type React from "react"
-import "./globals.css"
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { Providers } from "../providers"
+import "./globals.css"
+import { Providers } from "./providers"
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Store - متجر إلكتروني",
-  description: "Your online store - متجرك الإلكتروني",
-  generator: "v0.dev",
+  description: "متجر إلكتروني متكامل",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -19,7 +21,10 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   )
