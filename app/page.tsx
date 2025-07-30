@@ -1,66 +1,77 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import { Suspense } from "react"
 import { Header } from "@/components/Header"
-import { AppSidebar } from "@/components/Sidebar"
+import { Sidebar } from "@/components/Sidebar"
 import { ProductGrid } from "@/components/ProductGrid"
 import { CategorySection } from "@/components/CategorySection"
+import { Skeleton } from "@/components/ui/skeleton"
 
-interface Product {
-  _id: string
-  name: { ar: string; fr: string }
-  price: number
-  description: { ar: string; fr: string }
-  image: string
-  category: string
-  inStock: boolean
+function ProductGridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="space-y-4">
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+      ))}
+    </div>
+  )
 }
 
-interface Category {
-  _id: string
-  name: { ar: string; fr: string }
+function CategorySkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="space-y-2">
+          <Skeleton className="h-32 w-full rounded-lg" />
+          <Skeleton className="h-4 w-3/4 mx-auto" />
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export default function HomePage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
-    try {
-      const [productsRes, categoriesRes] = await Promise.all([fetch("/api/products"), fetch("/api/categories")])
-
-      const productsData = await productsRes.json()
-      const categoriesData = await categoriesRes.json()
-
-      setProducts(productsData)
-      setCategories(categoriesData)
-    } catch (error) {
-      console.error("Error fetching data:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <SidebarInset className="flex-1">
-          <Header />
-          <main className="flex-1 p-6">
-            <div className="space-y-8">
-              <CategorySection categories={categories} />
-              <ProductGrid products={products} loading={loading} />
-            </div>
-          </main>
-        </SidebarInset>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <main className="flex-1 p-6">
+          <div className="max-w-7xl mx-auto space-y-8">
+            {/* Hero Section */}
+            <section className="text-center py-12 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg">
+              <h1 className="text-4xl font-bold text-foreground mb-4">مرحباً بك في متجرنا الإلكتروني</h1>
+              <p className="text-lg text-muted-foreground mb-6">اكتشف أفضل المنتجات بأسعار مميزة</p>
+              <div className="flex justify-center gap-4">
+                <button className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors">
+                  تسوق الآن
+                </button>
+                <button className="border border-border px-6 py-3 rounded-lg hover:bg-accent transition-colors">
+                  تصفح الفئات
+                </button>
+              </div>
+            </section>
+
+            {/* Categories Section */}
+            <section>
+              <h2 className="text-2xl font-bold text-foreground mb-6">الفئات</h2>
+              <Suspense fallback={<CategorySkeleton />}>
+                <CategorySection />
+              </Suspense>
+            </section>
+
+            {/* Featured Products Section */}
+            <section>
+              <h2 className="text-2xl font-bold text-foreground mb-6">المنتجات المميزة</h2>
+              <Suspense fallback={<ProductGridSkeleton />}>
+                <ProductGrid />
+              </Suspense>
+            </section>
+          </div>
+        </main>
       </div>
-    </SidebarProvider>
+    </div>
   )
 }

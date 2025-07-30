@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import clientPromise from "@/lib/mongodb"
-import nodemailer from "nodemailer"
+import * as nodemailer from "nodemailer"
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
+const transporter = nodemailer.createTransporter({
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: Number.parseInt(process.env.SMTP_PORT || "587"),
   secure: false,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.SMTP_USER || "",
+    pass: process.env.SMTP_PASS || "",
   },
 })
 
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     `
 
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+      from: process.env.EMAIL_FROM || "noreply@store.com",
       to: order.customerEmail,
       subject: `تأكيد الطلب - ${order.orderCode}`,
       html: emailHtml,
