@@ -1,21 +1,19 @@
-"use client"
-
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { Header } from "@/components/Header"
-import { AppSidebar } from "@/components/Sidebar"
 import { TrackOrder } from "@/components/TrackOrder"
+import { Header } from "@/components/Header"
+import { Sidebar } from "@/components/Sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
 export default function TrackOrderPage() {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <SidebarInset className="flex-1">
+      <div className="min-h-screen bg-background">
+        <Sidebar />
+        <div className="flex-1">
           <Header />
-          <main className="flex-1 p-6">
+          <main className="p-4 md:p-6">
             <TrackOrder />
           </main>
-        </SidebarInset>
+        </div>
       </div>
     </SidebarProvider>
   )

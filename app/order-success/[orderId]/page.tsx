@@ -1,25 +1,23 @@
-"use client"
-
-import { useParams } from "next/navigation"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { Header } from "@/components/Header"
-import { AppSidebar } from "@/components/Sidebar"
 import { OrderSuccess } from "@/components/OrderSuccess"
+import { Header } from "@/components/Header"
+import { Sidebar } from "@/components/Sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
-export default function OrderSuccessPage() {
-  const params = useParams()
-  const orderId = params.orderId as string
+interface OrderSuccessPageProps {
+  params: { orderId: string }
+}
 
+export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <SidebarInset className="flex-1">
+      <div className="min-h-screen bg-background">
+        <Sidebar />
+        <div className="flex-1">
           <Header />
-          <main className="flex-1 p-6">
-            <OrderSuccess orderId={orderId} />
+          <main className="p-4 md:p-6">
+            <OrderSuccess orderId={params.orderId} />
           </main>
-        </SidebarInset>
+        </div>
       </div>
     </SidebarProvider>
   )

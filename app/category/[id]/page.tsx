@@ -1,24 +1,23 @@
-"use client"
-import { useParams } from "next/navigation"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { Header } from "@/components/Header"
-import { AppSidebar } from "@/components/Sidebar"
 import { CategoryProducts } from "@/components/CategoryProducts"
+import { Header } from "@/components/Header"
+import { Sidebar } from "@/components/Sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
-export default function CategoryPage() {
-  const params = useParams()
-  const categoryId = params.id as string
+interface CategoryPageProps {
+  params: { id: string }
+}
 
+export default function CategoryPage({ params }: CategoryPageProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <SidebarInset className="flex-1">
+      <div className="min-h-screen bg-background">
+        <Sidebar />
+        <div className="flex-1">
           <Header />
-          <main className="flex-1 p-6">
-            <CategoryProducts categoryId={categoryId} />
+          <main className="p-4 md:p-6">
+            <CategoryProducts categoryId={params.id} />
           </main>
-        </SidebarInset>
+        </div>
       </div>
     </SidebarProvider>
   )

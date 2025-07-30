@@ -7,17 +7,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['localhost', 'vercel.app'],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
     unoptimized: true,
-  },
-  experimental: {
-    serverComponentsExternalPackages: ['mongoose'],
   },
 }
 

@@ -1,25 +1,23 @@
-"use client"
-
-import { useParams } from "next/navigation"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { Header } from "@/components/Header"
-import { AppSidebar } from "@/components/Sidebar"
 import { PaymentPage } from "@/components/PaymentPage"
+import { Header } from "@/components/Header"
+import { Sidebar } from "@/components/Sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
-export default function PaymentPageRoute() {
-  const params = useParams()
-  const orderId = params.orderId as string
+interface PaymentPageProps {
+  params: { orderId: string }
+}
 
+export default function Payment({ params }: PaymentPageProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <SidebarInset className="flex-1">
+      <div className="min-h-screen bg-background">
+        <Sidebar />
+        <div className="flex-1">
           <Header />
-          <main className="flex-1 p-6">
-            <PaymentPage orderId={orderId} />
+          <main className="p-4 md:p-6">
+            <PaymentPage orderId={params.orderId} />
           </main>
-        </SidebarInset>
+        </div>
       </div>
     </SidebarProvider>
   )

@@ -1,58 +1,47 @@
 "use client"
 
+import { Package, Truck } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Home, Package, Truck } from "lucide-react"
 import {
-  Sidebar,
+  Sidebar as SidebarComponent,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader,
 } from "@/components/ui/sidebar"
 import { useLanguage } from "@/app/providers"
 
-export function AppSidebar() {
-  const pathname = usePathname()
+export function Sidebar() {
   const { t } = useLanguage()
 
-  const items = [
-    {
-      title: t("store"),
-      url: "/",
-      icon: Home,
-    },
+  const menuItems = [
     {
       title: t("products"),
-      url: "/",
       icon: Package,
+      href: "/",
     },
     {
       title: t("trackOrder"),
-      url: "/track-order",
       icon: Truck,
+      href: "/track-order",
     },
   ]
 
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <div className="px-4 py-2">
-          <h2 className="text-lg font-semibold">{t("store")}</h2>
-        </div>
-      </SidebarHeader>
+    <SidebarComponent>
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>{t("store")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <Link href={item.url}>
-                      <item.icon />
+                  <SidebarMenuButton asChild>
+                    <Link href={item.href}>
+                      <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -62,6 +51,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-    </Sidebar>
+    </SidebarComponent>
   )
 }
