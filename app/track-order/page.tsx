@@ -1,13 +1,15 @@
-import { TrackOrder } from "@/components/TrackOrder"
-import { Sidebar } from "@/components/Sidebar"
-import { Header } from "@/components/Header"
+"use client"
+
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import { Header } from "@/components/Header"
+import { AppSidebar } from "@/components/Sidebar"
+import { TrackOrder } from "@/components/TrackOrder"
 
 export default function TrackOrderPage() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <Sidebar />
+        <AppSidebar />
         <SidebarInset className="flex-1">
           <Header />
           <main className="flex-1 p-6">

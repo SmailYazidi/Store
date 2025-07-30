@@ -1,30 +1,20 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/app/providers"
-import type { Category } from "@/lib/models"
 
-export function CategorySection() {
-  const [categories, setCategories] = useState<Category[]>([])
+interface Category {
+  _id: string
+  name: { ar: string; fr: string }
+}
+
+interface CategorySectionProps {
+  categories: Category[]
+}
+
+export function CategorySection({ categories }: CategorySectionProps) {
   const { language, t } = useLanguage()
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/categories")
-        if (response.ok) {
-          const data = await response.json()
-          setCategories(data)
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error)
-      }
-    }
-
-    fetchCategories()
-  }, [])
 
   if (categories.length === 0) {
     return null

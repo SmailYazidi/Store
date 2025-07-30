@@ -10,7 +10,13 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLanguage } from "@/app/providers"
-import type { Product } from "@/lib/models"
+
+interface Product {
+  _id: string
+  name: { ar: string; fr: string }
+  price: number
+  mainImage: string
+}
 
 interface OrderFormProps {
   productId: string

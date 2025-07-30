@@ -5,7 +5,14 @@ import Link from "next/link"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/app/providers"
-import type { Product } from "@/lib/models"
+
+interface Product {
+  _id: string
+  name: { ar: string; fr: string }
+  price: number
+  description: { ar: string; fr: string }
+  mainImage: string
+}
 
 interface ProductCardProps {
   product: Product

@@ -1,17 +1,23 @@
-import { OrderForm } from "@/components/OrderForm"
-import { Sidebar } from "@/components/Sidebar"
-import { Header } from "@/components/Header"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+"use client"
 
-export default function OrderPage({ params }: { params: { id: string } }) {
+import { useParams } from "next/navigation"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import { Header } from "@/components/Header"
+import { AppSidebar } from "@/components/Sidebar"
+import { OrderForm } from "@/components/OrderForm"
+
+export default function OrderPage() {
+  const params = useParams()
+  const productId = params.id as string
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <Sidebar />
+        <AppSidebar />
         <SidebarInset className="flex-1">
           <Header />
           <main className="flex-1 p-6">
-            <OrderForm productId={params.id} />
+            <OrderForm productId={productId} />
           </main>
         </SidebarInset>
       </div>

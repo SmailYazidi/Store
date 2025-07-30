@@ -3,7 +3,20 @@
 import { useEffect, useState } from "react"
 import { ProductCard } from "./ProductCard"
 import { useLanguage } from "@/app/providers"
-import type { Product, Category } from "@/lib/models"
+
+interface Product {
+  _id: string
+  name: { ar: string; fr: string }
+  price: number
+  description: { ar: string; fr: string }
+  mainImage: string
+  isVisible: boolean
+}
+
+interface Category {
+  _id: string
+  name: { ar: string; fr: string }
+}
 
 interface CategoryProductsProps {
   categoryId: string

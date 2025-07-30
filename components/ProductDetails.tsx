@@ -6,7 +6,15 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useLanguage } from "@/app/providers"
-import type { Product } from "@/lib/models"
+
+interface Product {
+  _id: string
+  name: { ar: string; fr: string }
+  price: number
+  description: { ar: string; fr: string }
+  mainImage: string
+  images: string[]
+}
 
 interface ProductDetailsProps {
   productId: string
