@@ -1,57 +1,90 @@
 "use client"
 
-import { ProductCard } from "./ProductCard"
+import { useState, useEffect } from "react"
+import { ProductCard } from "@/components/ProductCard"
+import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/app/providers"
+import type { Product } from "@/lib/models"
 
-interface Product {
-  _id: string
-  name: { ar: string; fr: string }
-  price: number
-  description: { ar: string; fr: string }
-  mainImage: string
-  images: string[]
-  category: string
-  inStock: boolean
-  isVisible: boolean
-}
-
-interface ProductGridProps {
-  products: Product[]
-  loading: boolean
-}
-
-export function ProductGrid({ products, loading }: ProductGridProps) {
+export function ProductGrid() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
   const { t } = useLanguage()
 
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="animate-pulse">
-            <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
-            <div className="bg-gray-200 h-4 rounded mb-2"></div>
-            <div className="bg-gray-200 h-4 rounded w-2/3"></div>
-          </div>
-        ))}
-      </div>
-    )
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  const fetchProducts = async (pageNum = 1) => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/products?page=${pageNum}&limit=12`)
+      if (response.ok) {
+        const data = await response.json()
+        if (pageNum === 1) {
+          setProducts(data.products)
+        } else {
+          setProducts((prev) => [...prev, ...data.products])
+        }
+        setHasMore(data.hasMore)
+        setPage(pageNum)
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  if (products.length === 0) {
+  const loadMore = () => {
+    if (!loading && hasMore) {
+      fetchProducts(page + 1)
+    }
+  }
+
+  if (loading && products.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">{t("noProducts")}</p>
-      </div>
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold">{t("products")}</h2>
+        <div className="grid-responsive">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-muted aspect-square rounded-lg mb-4" />
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-4 bg-muted rounded w-1/2" />
+                <div className="h-6 bg-muted rounded w-1/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {products
-        .filter((product) => product.isVisible)
-        .map((product) => (
+    <section className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">{t("products")}</h2>
+      </div>
+
+      <div className="grid-responsive">
+        {products.map((product) => (
           <ProductCard key={product._id} product={product} />
         ))}
-    </div>
+      </div>
+
+      {hasMore && (
+        <div className="text-center">
+          <Button onClick={loadMore} disabled={loading} variant="outline" className="min-w-32 bg-transparent">
+            {loading ? t("loading") : "عرض المزيد"}
+          </Button>
+        </div>
+      )}
+
+      {!hasMore && products.length > 0 && <p className="text-center text-muted-foreground">تم عرض جميع المنتجات</p>}
+    </section>
   )
 }

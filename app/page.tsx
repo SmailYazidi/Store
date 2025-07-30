@@ -1,6 +1,9 @@
+"use client"
+
 import { Suspense } from "react"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { Header } from "@/components/Header"
-import { Sidebar } from "@/components/Sidebar"
+import { AppSidebar } from "@/components/Sidebar"
 import { ProductGrid } from "@/components/ProductGrid"
 import { CategorySection } from "@/components/CategorySection"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -34,12 +37,12 @@ function CategorySkeleton() {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto space-y-8">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          <Header />
+          <main className="flex-1 p-6 space-y-8">
             {/* Hero Section */}
             <section className="text-center py-12 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg">
               <h1 className="text-4xl font-bold text-foreground mb-4">مرحباً بك في متجرنا الإلكتروني</h1>
@@ -69,9 +72,9 @@ export default function HomePage() {
                 <ProductGrid />
               </Suspense>
             </section>
-          </div>
-        </main>
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   )
 }
