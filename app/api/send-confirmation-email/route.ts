@@ -3,7 +3,7 @@ import { ObjectId } from "mongodb"
 import clientPromise from "@/lib/mongodb"
 import nodemailer from "nodemailer"
 
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number.parseInt(process.env.SMTP_PORT || "587"),
   secure: false,

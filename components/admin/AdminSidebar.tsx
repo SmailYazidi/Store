@@ -1,6 +1,7 @@
 "use client"
 
 import { Package, ShoppingCart, Folder } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   Sidebar,
   SidebarContent,
@@ -48,9 +49,11 @@ export function AdminSidebar({ activeTab, setActiveTab }: AdminSidebarProps) {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton isActive={activeTab === item.id} onClick={() => setActiveTab(item.id)}>
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                  <SidebarMenuButton asChild isActive={activeTab === item.id}>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => setActiveTab(item.id)}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

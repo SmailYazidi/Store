@@ -28,8 +28,8 @@ export function AdminDashboard() {
           <AdminHeader />
           <main className="p-4 md:p-6">
             {activeTab === "products" && <ProductsManager />}
-            {activeTab === "categories" && <CategoriesManager />}
             {activeTab === "orders" && <OrdersManager />}
+            {activeTab === "categories" && <CategoriesManager />}
           </main>
         </div>
       </div>
