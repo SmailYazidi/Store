@@ -1,23 +1,25 @@
-import { ProductDetails } from "@/components/ProductDetails"
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
-import { SidebarProvider } from "@/components/ui/sidebar"
+import { ProductDetails } from "@/components/ProductDetails"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
 interface ProductPageProps {
-  params: { id: string }
+  params: {
+    id: string
+  }
 }
 
 export default function ProductPage({ params }: ProductPageProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen flex w-full">
         <Sidebar />
-        <div className="flex-1">
+        <SidebarInset className="flex-1">
           <Header />
-          <main className="p-4 md:p-6">
+          <main className="flex-1 p-4 md:p-6">
             <ProductDetails productId={params.id} />
           </main>
-        </div>
+        </SidebarInset>
       </div>
     </SidebarProvider>
   )
