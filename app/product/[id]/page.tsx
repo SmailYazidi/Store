@@ -1,7 +1,7 @@
 import { ProductDetails } from "@/components/ProductDetails"
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
-import { SidebarProvider } from "@/components/ui/sidebar"
+
 
 interface ProductPageProps {
   params: { id: string }
@@ -9,7 +9,7 @@ interface ProductPageProps {
 
 export default function ProductPage({ params }: ProductPageProps) {
   return (
-    <SidebarProvider>
+
       <div className="min-h-screen bg-background">
         <Sidebar />
         <div className="flex-1">
@@ -19,6 +19,6 @@ export default function ProductPage({ params }: ProductPageProps) {
           </main>
         </div>
       </div>
-    </SidebarProvider>
+
   )
 }

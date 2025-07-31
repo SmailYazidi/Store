@@ -1,11 +1,11 @@
 import { TrackOrder } from "@/components/TrackOrder"
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
-import { SidebarProvider } from "@/components/ui/sidebar"
+
 
 export default function TrackOrderPage() {
   return (
-    <SidebarProvider>
+  
       <div className="min-h-screen bg-background">
         <Sidebar />
         <div className="flex-1">
@@ -15,6 +15,6 @@ export default function TrackOrderPage() {
           </main>
         </div>
       </div>
-    </SidebarProvider>
+   
   )
 }

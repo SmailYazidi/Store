@@ -1,7 +1,7 @@
 import { OrderSuccess } from "@/components/OrderSuccess"
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
-import { SidebarProvider } from "@/components/ui/sidebar"
+
 
 interface OrderSuccessPageProps {
   params: { orderId: string }
@@ -9,7 +9,7 @@ interface OrderSuccessPageProps {
 
 export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
   return (
-    <SidebarProvider>
+
       <div className="min-h-screen bg-background">
         <Sidebar />
         <div className="flex-1">
@@ -19,6 +19,6 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
           </main>
         </div>
       </div>
-    </SidebarProvider>
+
   )
 }

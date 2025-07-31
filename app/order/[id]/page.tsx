@@ -1,7 +1,7 @@
 import { OrderForm } from "@/components/OrderForm"
 import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
-import { SidebarProvider } from "@/components/ui/sidebar"
+
 
 interface OrderPageProps {
   params: { id: string }
@@ -9,7 +9,7 @@ interface OrderPageProps {
 
 export default function OrderPage({ params }: OrderPageProps) {
   return (
-    <SidebarProvider>
+
       <div className="min-h-screen bg-background">
         <Sidebar />
         <div className="flex-1">
@@ -19,6 +19,6 @@ export default function OrderPage({ params }: OrderPageProps) {
           </main>
         </div>
       </div>
-    </SidebarProvider>
+
   )
 }

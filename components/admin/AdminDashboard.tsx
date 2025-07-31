@@ -7,7 +7,7 @@ import { AdminSidebar } from "./AdminSidebar"
 import { ProductsManager } from "./ProductsManager"
 import { OrdersManager } from "./OrdersManager"
 import { CategoriesManager } from "./CategoriesManager"
-import { SidebarProvider } from "@/components/ui/sidebar"
+
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("products")
@@ -21,7 +21,7 @@ export function AdminDashboard() {
   }, [router])
 
   return (
-    <SidebarProvider>
+
       <div className="min-h-screen bg-background">
         <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <div className="flex-1">
@@ -33,6 +33,6 @@ export function AdminDashboard() {
           </main>
         </div>
       </div>
-    </SidebarProvider>
+
   )
 }
