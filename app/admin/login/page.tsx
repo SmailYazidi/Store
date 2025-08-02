@@ -1,12 +1,10 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Lock, Shield } from "lucide-react"
@@ -47,14 +45,14 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
             <Shield className="w-8 h-8 text-white" />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">لوحة تحكم المسؤول</CardTitle>
-          <CardDescription className="text-gray-600">أدخل كلمة المرور للوصول إلى لوحة التحكم</CardDescription>
+          <CardDescription className="text-gray-600">أدخل كلمة المرور للدخول</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

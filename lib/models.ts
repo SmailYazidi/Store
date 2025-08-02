@@ -60,7 +60,7 @@ export interface Order extends Timestamped {
 }
 
 // كلمة مرور المسؤول (يمكن تخزين hash وليس كلمة المرور مباشرة)
-export interface AdminPassword extends Timestamped {
+export interface admin_passwords extends Timestamped {
   _id?: string
   passwordHash: string
 }

@@ -1,3 +1,4 @@
+// lib/mongodb.ts
 import { MongoClient } from "mongodb"
 
 if (!process.env.MONGODB_URI) {
@@ -25,4 +26,8 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect()
 }
 
-export default clientPromise
+// ✅ تصدير دالة connectDB وليس default
+export async function connectDB() {
+  const client = await clientPromise
+  return client.db("store") // ← غير الاسم لو عندك اسم قاعدة مختلف
+}

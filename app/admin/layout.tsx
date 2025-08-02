@@ -28,7 +28,11 @@ export default function AdminRootLayout({
     }
 
     try {
-      const response = await fetch("/api/admin/account")
+      const response = await fetch("/api/admin/account", {
+        method: "GET",
+        credentials: "include", // 🔒 ضروري لجلب الكوكيز
+      })
+
       if (response.ok) {
         setIsAuthenticated(true)
       } else {
