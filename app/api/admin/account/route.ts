@@ -1,78 +1,84 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
-import { verifyAdminToken } from "@/lib/auth"
-import bcrypt from "bcryptjs"
+import { connectDB } from "@/lib/mongodb"
+import { getAdminFromRequest, hashPassword, verifyPassword } from "@/lib/auth"
+import { ObjectId } from "mongodb"
 
 export async function GET(request: NextRequest) {
   try {
-    const adminVerification = await verifyAdminToken(request)
-    if (!adminVerification.isValid) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const admin = await getAdminFromRequest(request)
+    if (!admin) {
+      return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
+    }
+
+    const db = await connectDB()
+    const adminData = await db
+      .collection("admins")
+      .findOne({ _id: new ObjectId(admin.id) }, { projection: { passwordHash: 0 } })
+
+    if (!adminData) {
+      return NextResponse.json({ error: "المستخدم غير موجود" }, { status: 404 })
     }
 
     return NextResponse.json({
       admin: {
-        username: adminVerification.username,
-        lastLogin: new Date(),
+        id: adminData._id.toString(),
+        username: adminData.username,
+        email: adminData.email,
+        createdAt: adminData.createdAt,
       },
     })
   } catch (error) {
-    console.error("Get admin account error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Get admin error:", error)
+    return NextResponse.json({ error: "حدث خطأ في جلب بيانات الحساب" }, { status: 500 })
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const adminVerification = await verifyAdminToken(request)
-    if (!adminVerification.isValid) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const admin = await getAdminFromRequest(request)
+    if (!admin) {
+      return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
     const { currentPassword, newPassword } = await request.json()
 
     if (!currentPassword || !newPassword) {
-      return NextResponse.json({ error: "Current password and new password are required" }, { status: 400 })
+      return NextResponse.json({ error: "كلمة المرور الحالية والجديدة مطلوبتان" }, { status: 400 })
     }
 
     if (newPassword.length < 6) {
-      return NextResponse.json({ error: "New password must be at least 6 characters long" }, { status: 400 })
+      return NextResponse.json({ error: "كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل" }, { status: 400 })
     }
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB()
+    const adminData = await db.collection("admins").findOne({
+      _id: new ObjectId(admin.id),
+    })
 
-    // Get current admin password
-    const adminPassword = await db.collection("adminPasswords").findOne({})
-
-    if (!adminPassword) {
-      return NextResponse.json({ error: "Admin account not found" }, { status: 404 })
+    if (!adminData) {
+      return NextResponse.json({ error: "المستخدم غير موجود" }, { status: 404 })
     }
 
-    // Verify current password
-    const isValidPassword = await bcrypt.compare(currentPassword, adminPassword.passwordHash)
-
+    const isValidPassword = await verifyPassword(currentPassword, adminData.passwordHash)
     if (!isValidPassword) {
-      return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 })
+      return NextResponse.json({ error: "كلمة المرور الحالية غير صحيحة" }, { status: 400 })
     }
 
-    // Hash new password
-    const saltRounds = 12
-    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds)
+    const hashedNewPassword = await hashPassword(newPassword)
 
-    // Update password
-    await db.collection("adminPasswords").updateOne(
-      { _id: adminPassword._id },
+    await db.collection("admins").updateOne(
+      { _id: new ObjectId(admin.id) },
       {
         $set: {
-          passwordHash: newPasswordHash,
+          passwordHash: hashedNewPassword,
           updatedAt: new Date(),
         },
       },
     )
 
-    return NextResponse.json({ message: "Password updated successfully" })
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Update admin password error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Update password error:", error)
+    return NextResponse.json({ error: "حدث خطأ في تحديث كلمة المرور" }, { status: 500 })
   }
 }

@@ -1,45 +1,39 @@
-import type { NextRequest } from "next/server"
 import jwt from "jsonwebtoken"
+import bcrypt from "bcryptjs"
+import type { NextRequest } from "next/server"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
 
-interface AdminTokenPayload {
-  adminId: string
+export interface AdminUser {
+  id: string
   username: string
-  iat: number
-  exp: number
+  email: string
 }
 
-export async function verifyAdminToken(request: NextRequest) {
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12)
+}
+
+export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  return bcrypt.compare(password, hashedPassword)
+}
+
+export function generateToken(user: AdminUser): string {
+  return jwt.sign({ id: user.id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: "24h" })
+}
+
+export function verifyToken(token: string): AdminUser | null {
   try {
-    // Get token from cookie or Authorization header
-    let token = request.cookies.get("admin-token")?.value
-
-    if (!token) {
-      const authHeader = request.headers.get("Authorization")
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        token = authHeader.substring(7)
-      }
-    }
-
-    if (!token) {
-      return { isValid: false, error: "No token provided" }
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET) as AdminTokenPayload
-
-    return {
-      isValid: true,
-      adminId: decoded.adminId,
-      username: decoded.username,
-    }
+    const decoded = jwt.verify(token, JWT_SECRET) as AdminUser
+    return decoded
   } catch (error) {
-    console.error("Token verification error:", error)
-    return { isValid: false, error: "Invalid token" }
+    return null
   }
 }
 
-export function generateAdminToken(adminId: string, username: string) {
-  return jwt.sign({ adminId, username }, JWT_SECRET, { expiresIn: "24h" })
+export async function getAdminFromRequest(request: NextRequest): Promise<AdminUser | null> {
+  const token = request.cookies.get("admin-token")?.value
+  if (!token) return null
+
+  return verifyToken(token)
 }

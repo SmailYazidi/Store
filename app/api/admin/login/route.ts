@@ -1,50 +1,60 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
-import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
-
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
+import { connectDB } from "@/lib/mongodb"
+import { verifyPassword, generateToken } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json()
 
     if (!username || !password) {
-      return NextResponse.json({ error: "Username and password are required" }, { status: 400 })
+      return NextResponse.json({ error: "اسم المستخدم وكلمة المرور مطلوبان" }, { status: 400 })
     }
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB()
+    const admin = await db.collection("admins").findOne({
+      $or: [{ username }, { email: username }],
+    })
 
-    // Find admin password record
-    const adminPassword = await db.collection("adminPasswords").findOne({})
-
-    if (!adminPassword) {
-      return NextResponse.json({ error: "Admin account not found" }, { status: 404 })
+    if (!admin) {
+      return NextResponse.json({ error: "بيانات الدخول غير صحيحة" }, { status: 401 })
     }
 
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, adminPassword.passwordHash)
-
+    const isValidPassword = await verifyPassword(password, admin.passwordHash)
     if (!isValidPassword) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
+      return NextResponse.json({ error: "بيانات الدخول غير صحيحة" }, { status: 401 })
     }
 
-    // Create JWT token
-    const token = jwt.sign({ adminId: adminPassword._id, username }, JWT_SECRET, { expiresIn: "24h" })
+    const token = generateToken({
+      id: admin._id.toString(),
+      username: admin.username,
+      email: admin.email,
+    })
 
-    // Create response with token in cookie
-    const response = NextResponse.json({ message: "Login successful", token }, { status: 200 })
+    const response = NextResponse.json({
+      success: true,
+      user: {
+        id: admin._id.toString(),
+        username: admin.username,
+        email: admin.email,
+      },
+    })
 
     response.cookies.set("admin-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 86400, // 24 hours
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60, // 24 hours
     })
 
     return response
   } catch (error) {
-    console.error("Admin login error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Login error:", error)
+    return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 })
   }
+}
+
+export async function DELETE(request: NextRequest) {
+  const response = NextResponse.json({ success: true })
+  response.cookies.delete("admin-token")
+  return response
 }

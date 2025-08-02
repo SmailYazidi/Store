@@ -10,7 +10,7 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
@@ -65,24 +65,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-gray-50">
-      {/* Mobile sidebar overlay */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="fixed inset-0 bg-black opacity-50" onClick={() => setIsSidebarOpen(false)} />
-          <AdminSidebar onClose={() => setIsSidebarOpen(false)} />
-        </div>
-      )}
+    <div className="min-h-screen bg-gray-50">
+      <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
-        <AdminSidebar />
-      </div>
+      <div className="lg:pl-64">
+        <AdminHeader onMenuClick={() => setSidebarOpen(true)} onLogout={handleLogout} />
 
-      {/* Main content */}
-      <div className="lg:pl-64 flex flex-col flex-1">
-        <AdminHeader onMenuClick={() => setIsSidebarOpen(true)} onLogout={handleLogout} />
-        <main className="flex-1">{children}</main>
+        <main className="p-6">{children}</main>
       </div>
     </div>
   )
