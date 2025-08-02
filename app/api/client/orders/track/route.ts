@@ -1,38 +1,58 @@
 import { NextResponse } from "next/server"
-import clientPromise from "@/lib/mongodb"
+import { connectDB } from "@/lib/mongodb"
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get("code")
 
-    if (!code) {
-      return NextResponse.json({ error: "Order code is required" }, { status: 400 })
+    // Validate order code
+    if (!code || typeof code !== "string" || code.length !== 12) {
+      return NextResponse.json(
+        { error: "Valid 12-character order code is required" },
+        { status: 400 }
+      )
     }
 
-    const client = await clientPromise
-    const db = client.db("store")
-
-    const order = await db.collection("orders").findOne({ orderCode: code })
+    const db = await connectDB()
+    const order = await db.collection("orders").findOne({ 
+      orderCode: code.toUpperCase() // Ensure case insensitivity
+    })
 
     if (!order) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 })
+      return NextResponse.json(
+        { error: "Order not found. Please check your order code." },
+        { status: 404 }
+      )
     }
 
-    // Return only necessary information for tracking
+    // Format response data
     const trackingInfo = {
-      _id: order._id,
+      orderId: order._id,
       orderCode: order.orderCode,
-      customerName: order.customerName.split(" ")[0], // Only first name
+      customerName: order.customerName.split(" ")[0], // First name only
       productName: order.productName,
       productImage: order.productImage,
       status: order.status,
+      estimatedDelivery: order.estimatedDelivery, // Added if available
       createdAt: order.createdAt,
+      lastUpdated: order.updatedAt || order.createdAt,
+      // Consider adding status history if available
     }
 
-    return NextResponse.json(trackingInfo)
+    return NextResponse.json(trackingInfo, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30'
+      }
+    })
   } catch (error) {
-    console.error("Error tracking order:", error)
-    return NextResponse.json({ error: "Failed to track order" }, { status: 500 })
+    console.error("Order tracking error:", error)
+    return NextResponse.json(
+      { 
+        error: "We're having trouble retrieving your order. Please try again later.",
+        code: "TRACKING_SERVICE_ERROR"
+      },
+      { status: 500 }
+    )
   }
 }

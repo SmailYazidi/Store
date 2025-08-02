@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import clientPromise from "@/lib/mongodb"
+import { connectDB } from "@/lib/mongodb"
 
 interface VerifyCodeRequestBody {
   orderCode: string
@@ -14,8 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Missing orderCode or verificationCode" }, { status: 400 })
     }
 
-    const client = await clientPromise
-    const db = client.db()
+    const db = await connectDB()
 
     const order = await db.collection("orders").findOne({ orderCode })
 

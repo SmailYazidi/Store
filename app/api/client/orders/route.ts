@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
-import clientPromise from "@/lib/mongodb"
+import { connectDB } from "@/lib/mongodb"
 
 function generateOrderCode(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -13,30 +13,47 @@ function generateOrderCode(): string {
 
 export async function GET() {
   try {
-    const client = await clientPromise
-    const db = client.db("store")
+    const db = await connectDB()
 
-    const orders = await db.collection("orders").find({}).sort({ createdAt: -1 }).toArray()
+    const orders = await db
+      .collection("orders")
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray()
 
     return NextResponse.json(orders)
   } catch (error) {
     console.error("Error fetching orders:", error)
-    return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to fetch orders" },
+      { status: 500 }
+    )
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const client = await clientPromise
-    const db = client.db("store")
-
+    const db = await connectDB()
     const body = await request.json()
 
+    // Validate productId
+    if (!ObjectId.isValid(body.productId)) {
+      return NextResponse.json(
+        { error: "Invalid product ID format" },
+        { status: 400 }
+      )
+    }
+
     // Get product details
-    const product = await db.collection("products").findOne({ _id: new ObjectId(body.productId) })
+    const product = await db
+      .collection("products")
+      .findOne({ _id: new ObjectId(body.productId) })
 
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 })
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      )
     }
 
     const orderCode = generateOrderCode()
@@ -47,8 +64,8 @@ export async function POST(request: Request) {
       customerPhone: body.phone,
       customerEmail: body.email,
       customerAddress: body.address,
-      productId: body.productId,
-      productName: body.productName,
+      productId: new ObjectId(body.productId), // Store as ObjectId
+      productName: product.name || body.productName,
       productPrice: product.price,
       productImage: product.mainImage,
       status: "processing",
@@ -66,6 +83,9 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("Error creating order:", error)
-    return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to create order" },
+      { status: 500 }
+    )
   }
 }
