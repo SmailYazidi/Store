@@ -1,63 +1,78 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getAdminFromRequest, verifyAdminPassword, hashPassword } from "@/lib/auth"
+import { connectToDatabase } from "@/lib/mongodb"
+import { verifyAdminToken } from "@/lib/auth"
+import bcrypt from "bcryptjs"
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
-    if (!admin) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
+    const adminVerification = await verifyAdminToken(request)
+    if (!adminVerification.isValid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     return NextResponse.json({
       admin: {
-        id: admin.id,
-        username: admin.username,
-        role: admin.role,
-        createdAt: new Date().toISOString(), // Mock date since we don't store admin in DB
+        username: adminVerification.username,
+        lastLogin: new Date(),
       },
     })
   } catch (error) {
-    console.error("Error fetching admin account:", error)
-    return NextResponse.json({ error: "حدث خطأ في جلب بيانات الحساب" }, { status: 500 })
+    console.error("Get admin account error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
-    if (!admin) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
+    const adminVerification = await verifyAdminToken(request)
+    if (!adminVerification.isValid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const { currentPassword, newPassword } = await request.json()
 
     if (!currentPassword || !newPassword) {
-      return NextResponse.json({ error: "كلمة المرور الحالية والجديدة مطلوبتان" }, { status: 400 })
+      return NextResponse.json({ error: "Current password and new password are required" }, { status: 400 })
     }
 
     if (newPassword.length < 6) {
-      return NextResponse.json({ error: "كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل" }, { status: 400 })
+      return NextResponse.json({ error: "New password must be at least 6 characters long" }, { status: 400 })
+    }
+
+    const { db } = await connectToDatabase()
+
+    // Get current admin password
+    const adminPassword = await db.collection("adminPasswords").findOne({})
+
+    if (!adminPassword) {
+      return NextResponse.json({ error: "Admin account not found" }, { status: 404 })
     }
 
     // Verify current password
-    const isCurrentPasswordValid = await verifyAdminPassword(currentPassword)
-    if (!isCurrentPasswordValid) {
-      return NextResponse.json({ error: "كلمة المرور الحالية غير صحيحة" }, { status: 400 })
+    const isValidPassword = await bcrypt.compare(currentPassword, adminPassword.passwordHash)
+
+    if (!isValidPassword) {
+      return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 })
     }
 
     // Hash new password
-    const newPasswordHash = await hashPassword(newPassword)
+    const saltRounds = 12
+    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds)
 
-    console.log("New password hash for environment variable:")
-    console.log(`ADMIN_PASSWORD_HASH=${newPasswordHash}`)
+    // Update password
+    await db.collection("adminPasswords").updateOne(
+      { _id: adminPassword._id },
+      {
+        $set: {
+          passwordHash: newPasswordHash,
+          updatedAt: new Date(),
+        },
+      },
+    )
 
-    return NextResponse.json({
-      success: true,
-      message: "تم تحديث كلمة المرور بنجاح. يرجى تحديث متغير البيئة ADMIN_PASSWORD_HASH",
-      newHash: newPasswordHash,
-    })
+    return NextResponse.json({ message: "Password updated successfully" })
   } catch (error) {
-    console.error("Error updating password:", error)
-    return NextResponse.json({ error: "حدث خطأ في تحديث كلمة المرور" }, { status: 500 })
+    console.error("Update admin password error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
