@@ -1,89 +1,103 @@
-// /home/smail/store/src/app/client/order-form/[productId]/page.tsx
+"use client"
 
-import { OrderStatus, Product } from '@/lib/models'
-import clientPromise from '@/lib/mongodb'
-import { randomUUID } from 'crypto'
-import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
-import { notFound } from 'next/navigation'
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
 
-interface Props {
-  params: {
-    productId: string
+interface Product {
+  _id: string
+  name: {
+    ar: string
+    en: string
   }
+  price: number
+  currency: string
+  mainImage: string
+  quantity: number
+  isVisible: boolean
 }
 
-export default async function OrderFormPage({ params }: Props) {
-  const { productId } = params
+export default function OrderFormPage() {
+  const router = useRouter()
+  const { productId } = useParams()
+  const [product, setProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  })
+  const [submitting, setSubmitting] = useState(false)
 
-  const client = await clientPromise
-  const db = client.db()
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        const res = await fetch(`/api/client/products/${productId}`)
+        const data = await res.json()
 
-  const product = await db.collection<Product>('products').findOne({ _id: productId })
+        if (!res.ok) throw new Error(data.error || "فشل تحميل المنتج")
 
-  if (!product || !product.isVisible || product.quantity < 1) {
-    return notFound()
-  }
+        if (!data.isVisible || data.quantity < 1) {
+          throw new Error("المنتج غير متوفر")
+        }
 
-  async function handleSubmit(formData: FormData) {
-    'use server'
-
-    const name = formData.get('name') as string
-    const email = formData.get('email') as string
-    const phone = formData.get('phone') as string
-    const address = formData.get('address') as string
-
-    if (!name || !email || !phone || !address) {
-      throw new Error('جميع الحقول مطلوبة')
+        setProduct(data)
+      } catch (err: any) {
+        setError(err.message || "حدث خطأ")
+      } finally {
+        setLoading(false)
+      }
     }
 
-    // Check product quantity again before placing the order
-    const latestProduct = await db.collection<Product>('products').findOne({ _id: productId })
-    if (!latestProduct || latestProduct.quantity < 1) {
-      throw new Error('المنتج غير متوفر حالياً')
-    }
+    fetchProduct()
+  }, [productId])
 
-    const orderCode = generateOrderCode()
-
-    // Decrease product quantity by 1
-    await db.collection<Product>('products').updateOne(
-      { _id: productId },
-      { $inc: { quantity: -1 } }
-    )
-
-    await db.collection('orders').insertOne({
-      orderCode,
-      customerName: name,
-      customerEmail: email,
-      customerPhone: phone,
-      customerAddress: address,
-      productId,
-      productName: product.name.ar,
-      productPrice: product.price,
-      productCurrency: product.currency || 'USD',
-      productImage: product.mainImage,
-      quantity: 1,
-      status: OrderStatus.Processing,
-      emailVerified: false,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    })
-
-    // Send email with code (you should replace this with real email logic)
-    console.log(`Send email to ${email} with code: ${orderCode}`)
-
-    revalidatePath(`/client/product/${productId}`)
-    redirect(`/client/verify/${orderCode}`)
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
   }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+
+    try {
+      const res = await fetch("/api/client/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          productId,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) throw new Error(data.error || "فشل إنشاء الطلب")
+
+      // ✅ الانتقال إلى صفحة التحقق
+      router.push(`/client/verify/${data.orderCode}`)
+    } catch (err: any) {
+      alert(err.message || "حدث خطأ")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) return <p className="text-center">جاري التحميل...</p>
+  if (error) return <p className="text-center text-red-600">{error}</p>
+  if (!product) return null
 
   return (
     <div className="max-w-xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">طلب منتج: {product.name.ar}</h1>
-      <form action={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           name="name"
           placeholder="الاسم الكامل"
           required
+          value={formData.name}
+          onChange={handleChange}
           className="w-full p-2 border rounded"
         />
         <input
@@ -91,32 +105,34 @@ export default async function OrderFormPage({ params }: Props) {
           type="email"
           placeholder="البريد الإلكتروني"
           required
+          value={formData.email}
+          onChange={handleChange}
           className="w-full p-2 border rounded"
         />
         <input
           name="phone"
           placeholder="رقم الهاتف"
           required
+          value={formData.phone}
+          onChange={handleChange}
           className="w-full p-2 border rounded"
         />
         <textarea
           name="address"
           placeholder="العنوان الكامل"
           required
+          value={formData.address}
+          onChange={handleChange}
           className="w-full p-2 border rounded"
         />
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          disabled={submitting}
         >
-          متابعة
+          {submitting ? "جارٍ إرسال الطلب..." : "متابعة"}
         </button>
       </form>
     </div>
   )
-}
-
-function generateOrderCode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  return Array.from({ length: 20 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
 }

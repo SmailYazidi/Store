@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import clientPromise from "@/lib/mongodb"
 import { Order, OrderStatus } from "@/lib/models"
 
 export default function VerifyOrderPage() {
@@ -16,22 +15,19 @@ export default function VerifyOrderPage() {
   const [submitting, setSubmitting] = useState(false)
   const [verified, setVerified] = useState(false)
 
-  // جلب بيانات الطلب حسب orderCode
   useEffect(() => {
     async function fetchOrder() {
-      setLoading(true)
       try {
-        const client = await clientPromise
-        const db = client.db()
-        const orderData = await db.collection<Order>("orders_pending").findOne({ orderCode })
+        const res = await fetch(`/api/client/orders/${orderCode}`)
+        const data = await res.json()
 
-        if (!orderData) {
-          setError("كود الطلب غير صحيح أو الطلب غير موجود")
+        if (!res.ok) {
+          setError(data.error || "فشل تحميل الطلب")
         } else {
-          setOrder(orderData)
+          setOrder(data)
         }
       } catch (err) {
-        setError("حدث خطأ أثناء جلب بيانات الطلب")
+        setError("فشل الاتصال بالخادم")
       } finally {
         setLoading(false)
       }
@@ -40,56 +36,41 @@ export default function VerifyOrderPage() {
     fetchOrder()
   }, [orderCode])
 
-  // دالة تحقق الكود (هنا مجرد مثال مبسط)
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault()
     if (!order) return
 
     setSubmitting(true)
     try {
-      // في تطبيق حقيقي، كان يتم إرسال كود تحقق عبر إيميل ويقارن هنا
-      // هنا نعتبر أن الكود الذي يدخل هو نفسه orderCode (كمثال)
       if (verificationCode === order.orderCode) {
-        const client = await clientPromise
-        const db = client.db()
-
-        // تحديث حالة الطلب: تم التحقق
-        await db.collection("orders_pending").updateOne(
-          { orderCode },
-          { $set: { status: OrderStatus.Confirmed, emailVerified: true, updatedAt: new Date() } }
-        )
-
+        // بدلًا من التعديل هنا، يُفضل استخدام API
         setVerified(true)
-
-        // يمكن حذف الطلب من "orders_pending" ونسخه إلى "orders" أو حفظه كما هو
-        // أو تحويل المستخدم لصفحة شكراً
         router.push(`/client/thank-you?orderCode=${orderCode}`)
       } else {
-        alert("كود التحقق غير صحيح، حاول مرة أخرى")
+        alert("كود التحقق غير صحيح")
       }
     } catch (err) {
-      alert("حدث خطأ أثناء التحقق، حاول مرة أخرى")
-      console.error(err)
+      alert("حدث خطأ أثناء التحقق")
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (loading) return <p>جاري تحميل بيانات الطلب...</p>
+  if (loading) return <p>جاري تحميل الطلب...</p>
   if (error) return <p>{error}</p>
   if (!order) return null
 
   return (
     <div>
       <h1>تحقق من طلبك</h1>
-      <p>الطلب لكود: <strong>{order.orderCode}</strong></p>
+      <p>الكود: <strong>{order.orderCode}</strong></p>
       <p>المنتج: {order.productName}</p>
       <p>السعر: {order.productPrice} {order.productCurrency ?? ""}</p>
 
       {!verified ? (
         <form onSubmit={handleVerify}>
           <label>
-            أدخل كود التحقق الذي وصلك في الإيميل:
+            أدخل كود التحقق:
             <input
               type="text"
               required
@@ -98,7 +79,7 @@ export default function VerifyOrderPage() {
             />
           </label>
           <button type="submit" disabled={submitting}>
-            {submitting ? "جاري التحقق..." : "تحقق"}
+            {submitting ? "جارٍ التحقق..." : "تحقق"}
           </button>
         </form>
       ) : (
