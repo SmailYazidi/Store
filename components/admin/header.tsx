@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -10,44 +9,44 @@ interface AdminHeaderProps {
   onMenuClick: () => void
 }
 
-export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
+export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
 
   const handleLogout = async () => {
-    setLoading(true)
     try {
       await fetch("/api/admin/login", { method: "DELETE" })
       router.push("/admin/login")
       router.refresh()
     } catch (error) {
       console.error("Logout error:", error)
-    } finally {
-      setLoading(false)
     }
   }
 
   return (
-    <header className="bg-white shadow-sm border-b h-16 flex items-center justify-between px-6">
-      <Button variant="ghost" size="sm" onClick={onMenuClick} className="lg:hidden">
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+      <Button variant="ghost" size="sm" className="lg:hidden" onClick={onMenuClick}>
         <Menu className="h-5 w-5" />
       </Button>
 
-      <div className="flex items-center space-x-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <User className="h-5 w-5 ml-2" />
-              المسؤول
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleLogout} disabled={loading}>
-              <LogOut className="h-4 w-4 ml-2" />
-              تسجيل الخروج
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+        <div className="flex flex-1" />
+
+        <div className="flex items-center gap-x-4 lg:gap-x-6">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="relative">
+                <User className="h-5 w-5" />
+                <span className="sr-only">فتح قائمة المستخدم</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                تسجيل الخروج
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   )

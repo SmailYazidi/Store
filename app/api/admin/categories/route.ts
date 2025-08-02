@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectDB } from "@/lib/mongodb"
+import { connectToDatabase } from "@/lib/mongodb"
 import { getAdminFromRequest } from "@/lib/auth"
 import { ObjectId } from "mongodb"
 
@@ -10,8 +10,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const db = await connectDB()
+    const { db } = await connectToDatabase()
 
+    // Get categories with product count
     const categories = await db
       .collection("categories")
       .aggregate([
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ categories })
   } catch (error) {
-    console.error("Get categories error:", error)
+    console.error("Error fetching categories:", error)
     return NextResponse.json({ error: "حدث خطأ في جلب التصنيفات" }, { status: 500 })
   }
 }
@@ -51,38 +52,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const { name } = await request.json()
+    const categoryData = await request.json()
 
-    if (!name || !name.ar || !name.fr) {
+    // Validate required fields
+    if (!categoryData.name?.ar || !categoryData.name?.fr) {
       return NextResponse.json({ error: "اسم التصنيف باللغتين مطلوب" }, { status: 400 })
     }
 
-    const db = await connectDB()
+    const { db } = await connectToDatabase()
 
-    // Check for duplicate names
+    // Check if category already exists
     const existingCategory = await db.collection("categories").findOne({
-      $or: [{ "name.ar": name.ar }, { "name.fr": name.fr }],
+      $or: [{ "name.ar": categoryData.name.ar }, { "name.fr": categoryData.name.fr }],
     })
 
     if (existingCategory) {
-      return NextResponse.json({ error: "اسم التصنيف موجود بالفعل" }, { status: 400 })
+      return NextResponse.json({ error: "التصنيف موجود بالفعل" }, { status: 400 })
     }
 
-    const category = {
-      name,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
+    categoryData.createdAt = new Date()
+    categoryData.updatedAt = new Date()
 
-    const result = await db.collection("categories").insertOne(category)
+    const result = await db.collection("categories").insertOne(categoryData)
 
     return NextResponse.json({
       success: true,
+      message: "تم إضافة التصنيف بنجاح",
       categoryId: result.insertedId,
     })
   } catch (error) {
-    console.error("Create category error:", error)
-    return NextResponse.json({ error: "حدث خطأ في إنشاء التصنيف" }, { status: 500 })
+    console.error("Error creating category:", error)
+    return NextResponse.json({ error: "حدث خطأ في إضافة التصنيف" }, { status: 500 })
   }
 }
 
@@ -93,41 +93,25 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const { categoryId, name } = await request.json()
+    const { categoryId, ...updateData } = await request.json()
 
-    if (!categoryId || !name) {
-      return NextResponse.json({ error: "معرف التصنيف والاسم مطلوبان" }, { status: 400 })
+    if (!categoryId) {
+      return NextResponse.json({ error: "معرف التصنيف مطلوب" }, { status: 400 })
     }
 
-    const db = await connectDB()
+    const { db } = await connectToDatabase()
 
-    // Check for duplicate names (excluding current category)
-    const existingCategory = await db.collection("categories").findOne({
-      _id: { $ne: new ObjectId(categoryId) },
-      $or: [{ "name.ar": name.ar }, { "name.fr": name.fr }],
-    })
+    updateData.updatedAt = new Date()
 
-    if (existingCategory) {
-      return NextResponse.json({ error: "اسم التصنيف موجود بالفعل" }, { status: 400 })
-    }
-
-    const result = await db.collection("categories").updateOne(
-      { _id: new ObjectId(categoryId) },
-      {
-        $set: {
-          name,
-          updatedAt: new Date(),
-        },
-      },
-    )
+    const result = await db.collection("categories").updateOne({ _id: new ObjectId(categoryId) }, { $set: updateData })
 
     if (result.matchedCount === 0) {
       return NextResponse.json({ error: "التصنيف غير موجود" }, { status: 404 })
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, message: "تم تحديث التصنيف بنجاح" })
   } catch (error) {
-    console.error("Update category error:", error)
+    console.error("Error updating category:", error)
     return NextResponse.json({ error: "حدث خطأ في تحديث التصنيف" }, { status: 500 })
   }
 }
@@ -146,7 +130,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "معرف التصنيف مطلوب" }, { status: 400 })
     }
 
-    const db = await connectDB()
+    const { db } = await connectToDatabase()
 
     // Check if category has products
     const productCount = await db.collection("products").countDocuments({
@@ -154,20 +138,23 @@ export async function DELETE(request: NextRequest) {
     })
 
     if (productCount > 0) {
-      return NextResponse.json({ error: "لا يمكن حذف التصنيف لأنه يحتوي على منتجات" }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: `لا يمكن حذف التصنيف لأنه يحتوي على ${productCount} منتج`,
+        },
+        { status: 400 },
+      )
     }
 
-    const result = await db.collection("categories").deleteOne({
-      _id: new ObjectId(categoryId),
-    })
+    const result = await db.collection("categories").deleteOne({ _id: new ObjectId(categoryId) })
 
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: "التصنيف غير موجود" }, { status: 404 })
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, message: "تم حذف التصنيف بنجاح" })
   } catch (error) {
-    console.error("Delete category error:", error)
+    console.error("Error deleting category:", error)
     return NextResponse.json({ error: "حدث خطأ في حذف التصنيف" }, { status: 500 })
   }
 }

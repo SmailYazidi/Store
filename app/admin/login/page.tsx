@@ -9,14 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Lock, User } from "lucide-react"
+import { Loader2, Lock, Shield } from "lucide-react"
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  })
+  const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -31,7 +28,7 @@ export default function AdminLoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ password }),
       })
 
       const data = await response.json()
@@ -49,19 +46,15 @@ export default function AdminLoginPage() {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }))
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">لوحة تحكم المسؤول</CardTitle>
-          <CardDescription>قم بتسجيل الدخول للوصول إلى لوحة التحكم</CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="text-center space-y-4">
+          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-900">لوحة تحكم المسؤول</CardTitle>
+          <CardDescription className="text-gray-600">أدخل كلمة المرور للوصول إلى لوحة التحكم</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,34 +65,15 @@ export default function AdminLoginPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username">اسم المستخدم أو البريد الإلكتروني</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  value={formData.username}
-                  onChange={handleChange}
-                  className="pl-10"
-                  placeholder="أدخل اسم المستخدم"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="password">كلمة المرور</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="password"
-                  name="password"
                   type="password"
                   required
-                  value={formData.password}
-                  onChange={handleChange}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
                   placeholder="أدخل كلمة المرور"
                   disabled={loading}

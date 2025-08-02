@@ -3,26 +3,39 @@ import bcrypt from "bcryptjs"
 import type { NextRequest } from "next/server"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || ""
 
 export interface AdminUser {
   id: string
   username: string
-  email: string
+  role: string
 }
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 12)
+export async function verifyAdminPassword(password: string): Promise<boolean> {
+  if (!ADMIN_PASSWORD_HASH) {
+    console.error("ADMIN_PASSWORD_HASH not set in environment variables")
+    return false
+  }
+
+  try {
+    return await bcrypt.compare(password, ADMIN_PASSWORD_HASH)
+  } catch (error) {
+    console.error("Password verification error:", error)
+    return false
+  }
 }
 
-export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword)
+export function generateAdminToken(): string {
+  const adminUser: AdminUser = {
+    id: "admin",
+    username: "admin",
+    role: "admin",
+  }
+
+  return jwt.sign(adminUser, JWT_SECRET, { expiresIn: "24h" })
 }
 
-export function generateToken(user: AdminUser): string {
-  return jwt.sign({ id: user.id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: "24h" })
-}
-
-export function verifyToken(token: string): AdminUser | null {
+export function verifyAdminToken(token: string): AdminUser | null {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as AdminUser
     return decoded
@@ -35,5 +48,9 @@ export async function getAdminFromRequest(request: NextRequest): Promise<AdminUs
   const token = request.cookies.get("admin-token")?.value
   if (!token) return null
 
-  return verifyToken(token)
+  return verifyAdminToken(token)
+}
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12)
 }

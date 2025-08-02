@@ -1,75 +1,67 @@
 "use client"
+
 import type React from "react"
-import { useState, useEffect } from "react"
+
+import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import AdminSidebar from "./sidebar"
-import AdminHeader from "./header"
+import { AdminSidebar } from "./sidebar"
+import { AdminHeader } from "./header"
+import { Loader2 } from "lucide-react"
 
 interface AdminLayoutProps {
   children: React.ReactNode
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
-    checkAuthentication()
-  }, [])
+    // Skip auth check for login page
+    if (pathname === "/admin/login") {
+      setLoading(false)
+      return
+    }
 
-  const checkAuthentication = async () => {
-    try {
-      const response = await fetch("/api/admin/account")
-      if (response.ok) {
-        setIsAuthenticated(true)
-      } else {
-        if (pathname !== "/admin/login") {
+    // Check authentication
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/admin/account")
+        if (!response.ok) {
           router.push("/admin/login")
+          return
         }
-      }
-    } catch (error) {
-      if (pathname !== "/admin/login") {
+        setLoading(false)
+      } catch (error) {
         router.push("/admin/login")
       }
-    } finally {
-      setIsLoading(false)
     }
-  }
 
-  const handleLogout = () => {
-    // Clear tokens
-    document.cookie = "admin-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-    localStorage.removeItem("admin-token")
+    checkAuth()
+  }, [pathname, router])
 
-    // Redirect to login
-    router.push("/admin/login")
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated && pathname !== "/admin/login") {
-    return null
-  }
-
+  // Show login page without layout
   if (pathname === "/admin/login") {
     return <>{children}</>
   }
 
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <AdminSidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
 
       <div className="lg:pl-64">
-        <AdminHeader onMenuClick={() => setSidebarOpen(true)} onLogout={handleLogout} />
+        <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="p-6">{children}</main>
       </div>

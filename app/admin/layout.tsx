@@ -1,10 +1,9 @@
 "use client"
 
 import type React from "react"
-
+import { AdminLayout } from "@/components/admin/admin-layout"
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import AdminLayout from "@/components/admin/admin-layout"
 import { Loader2 } from "lucide-react"
 
 export default function AdminRootLayout({
