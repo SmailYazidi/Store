@@ -1,31 +1,35 @@
 "use client"
+import { Button } from "@/components/ui/button"
+import { Menu, LogOut } from "lucide-react"
 
-import SearchBar from "./header/Search"
-import LanguageDropdown from "./header/LanguageDropdown"
-import Logo from "./header/Logo"
-import LeftMenu from "./header/LeftMenu"
-
-interface ClientHeaderProps {
+interface AdminHeaderProps {
   onMenuClick: () => void
+  onLogout: () => void
 }
 
-const AdminHeader = ({ onMenuClick }: ClientHeaderProps) => {
+export default function AdminHeader({ onMenuClick, onLogout }: AdminHeaderProps) {
   return (
-    <header className="flex items-center justify-between px-4 py-4 bg-white text-black border-b border-black">
-      {/* Left section */}
-      <div className="flex items-center gap-4">
-        <LeftMenu onMenuClick={onMenuClick} />
-        <Logo />
+    <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">
+      {/* Mobile menu button */}
+      <button
+        onClick={onMenuClick}
+        className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {/* Desktop title */}
+      <div className="hidden lg:block">
+        <h2 className="text-lg font-semibold text-gray-900">Store Management</h2>
       </div>
 
-      {/* Right section */}
-
-             <SearchBar />
-        <LanguageDropdown />
-   
-
+      {/* Actions */}
+      <div className="flex items-center space-x-4">
+        <Button variant="outline" size="sm" onClick={onLogout} className="flex items-center space-x-2 bg-transparent">
+          <LogOut className="h-4 w-4" />
+          <span>Logout</span>
+        </Button>
+      </div>
     </header>
   )
 }
-
-export default AdminHeader

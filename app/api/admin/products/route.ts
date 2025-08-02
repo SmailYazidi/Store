@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     // Build filter
     const filter: any = {}
     if (categoryId && categoryId !== "all") {
-      filter.categoryId = categoryId
+      filter.categoryId = new ObjectId(categoryId)
     }
     if (search) {
       filter.$or = [
