@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
-import { getAdminFromRequest } from "@/lib/auth"
+
 import { ObjectId } from "mongodb"
 
 export async function GET(request: NextRequest) {

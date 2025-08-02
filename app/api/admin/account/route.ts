@@ -1,63 +1,61 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { getAdminFromRequest, verifyAdminPassword, hashPassword } from "@/lib/auth"
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcrypt';
+import { connectDB } from '@/lib/mongodb';
+import { parse } from 'cookie';
 
-export async function GET(request: NextRequest) {
-  try {
-    const admin = await getAdminFromRequest(request)
-    if (!admin) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
-    }
+async function getAdminIdFromSession(request: NextRequest) {
+  const cookie = request.headers.get('cookie') || '';
+  const cookies = parse(cookie);
+  const sessionId = cookies.sessionId;
+  if (!sessionId) return null;
 
-    return NextResponse.json({
-      admin: {
-        id: admin.id,
-        username: admin.username,
-        role: admin.role,
-        createdAt: new Date().toISOString(), // Mock date since we don't store admin in DB
-      },
-    })
-  } catch (error) {
-    console.error("Error fetching admin account:", error)
-    return NextResponse.json({ error: "حدث خطأ في جلب بيانات الحساب" }, { status: 500 })
+  const db = await connectDB();
+  const session = await db.collection('admin_sessions').findOne({ _id: sessionId });
+  if (!session) return null;
+  if (new Date() > new Date(session.expiresAt)) {
+    await db.collection('admin_sessions').deleteOne({ _id: sessionId });
+    return null;
   }
+  return session.adminId;
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
-    if (!admin) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
+    const adminId = await getAdminIdFromSession(request);
+    if (!adminId) {
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { currentPassword, newPassword } = await request.json()
+    const { currentPassword, newPassword } = await request.json();
 
     if (!currentPassword || !newPassword) {
-      return NextResponse.json({ error: "كلمة المرور الحالية والجديدة مطلوبتان" }, { status: 400 })
+      return new NextResponse('Missing passwords', { status: 400 });
     }
 
-    if (newPassword.length < 6) {
-      return NextResponse.json({ error: "كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل" }, { status: 400 })
+    const db = await connectDB();
+    const admin = await db.collection('admin_passwords').findOne({ _id: adminId });
+
+    if (!admin) {
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    // Verify current password
-    const isCurrentPasswordValid = await verifyAdminPassword(currentPassword)
-    if (!isCurrentPasswordValid) {
-      return NextResponse.json({ error: "كلمة المرور الحالية غير صحيحة" }, { status: 400 })
+    const validPassword = await bcrypt.compare(currentPassword, admin.passwordHash);
+    if (!validPassword) {
+      return new NextResponse('Current password incorrect', { status: 403 });
     }
 
-    // Hash new password
-    const newPasswordHash = await hashPassword(newPassword)
+    // تشفير كلمة المرور الجديدة
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
-    console.log("New password hash for environment variable:")
-    console.log(`ADMIN_PASSWORD_HASH=${newPasswordHash}`)
+    await db.collection('admin_passwords').updateOne(
+      { _id: adminId },
+      { $set: { passwordHash: newPasswordHash } }
+    );
 
-    return NextResponse.json({
-      success: true,
-      message: "تم تحديث كلمة المرور بنجاح. يرجى تحديث متغير البيئة ADMIN_PASSWORD_HASH",
-      newHash: newPasswordHash,
-    })
+    return new NextResponse('Password updated successfully', { status: 200 });
+
   } catch (error) {
-    console.error("Error updating password:", error)
-    return NextResponse.json({ error: "حدث خطأ في تحديث كلمة المرور" }, { status: 500 })
+    console.error('Change password error:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
