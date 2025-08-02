@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+/* import { NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import clientPromise from "@/lib/mongodb"
 
@@ -65,3 +65,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to create product" }, { status: 500 })
   }
 }
+ */

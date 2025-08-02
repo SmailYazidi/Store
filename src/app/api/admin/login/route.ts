@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+/* import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import clientPromise from "@/lib/mongodb"
 
@@ -45,3 +45,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Login failed" }, { status: 500 })
   }
 }
+ */

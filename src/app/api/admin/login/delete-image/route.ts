@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+/* import { NextResponse } from "next/server"
 import { del } from "@vercel/blob"
 
 export async function POST(request: Request) {
@@ -17,3 +17,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to delete image" }, { status: 500 })
   }
 }
+ */
