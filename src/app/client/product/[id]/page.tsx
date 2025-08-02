@@ -23,8 +23,12 @@ export default function VerifyPage({ params }: { params: { orderCode: string } }
 
       toast.success('تم التحقق بنجاح')
       router.push(`/client/payment/${params.orderCode}`)
-    } catch (err: any) {
-      toast.error(err.message || 'حدث خطأ')
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message)
+      } else {
+        toast.error('حدث خطأ غير متوقع')
+      }
     } finally {
       setLoading(false)
     }
@@ -40,6 +44,7 @@ export default function VerifyPage({ params }: { params: { orderCode: string } }
         onChange={(e) => setCode(e.target.value)}
         className="w-full border px-3 py-2 rounded mb-4"
         placeholder="أدخل الكود هنا"
+        // inputMode="numeric"  // إذا الكود رقمي، شغلها
       />
       <button
         onClick={handleVerify}

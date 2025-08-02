@@ -27,8 +27,12 @@ const ClientMain = () => {
 
         setCategories(catData)
         setProducts(prodData)
-      } catch (error: any) {
-        toast.error(error.message || "حدث خطأ أثناء جلب البيانات")
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(error.message)
+        } else {
+          toast.error("حدث خطأ أثناء جلب البيانات")
+        }
       } finally {
         setLoading(false)
       }

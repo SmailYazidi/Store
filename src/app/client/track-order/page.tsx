@@ -1,12 +1,24 @@
-"use client"
+'use client'
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
+interface OrderInfo {
+  orderCode: string
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  productName: string
+  productPrice: number
+  productCurrency: string
+  quantity: number
+  status: string
+}
+
 export default function TrackOrderPage() {
   const router = useRouter()
   const [orderCode, setOrderCode] = useState("")
-  const [orderInfo, setOrderInfo] = useState<any>(null)
+  const [orderInfo, setOrderInfo] = useState<OrderInfo | null>(null)
   const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,15 +36,19 @@ export default function TrackOrderPage() {
       if (!res.ok) {
         throw new Error("Order not found.")
       }
-      const data = await res.json()
+      const data: OrderInfo = await res.json()
       setOrderInfo(data)
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch order.")
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("Failed to fetch order.")
+      }
     }
   }
 
   return (
-    <div style={{  margin: "auto", padding: 16, color: "#000", backgroundColor: "#fff", minHeight: "100vh" }}>
+    <div style={{ margin: "auto", padding: 16, color: "#000", backgroundColor: "#fff", minHeight: "100vh" }}>
       <button 
         onClick={() => router.back()} 
         style={{ marginBottom: 16, cursor: "pointer", fontSize: 18, border: "none", background: "none", color: "#000" }}
@@ -63,10 +79,14 @@ export default function TrackOrderPage() {
         </button>
       </form>
 
-      {error && <p style={{ color: "red", marginBottom: 16 }}>{error}</p>}
+      {error && (
+        <p style={{ color: "red", marginBottom: 16 }} role="alert" aria-live="assertive">
+          {error}
+        </p>
+      )}
 
       {orderInfo && (
-        <div>
+        <div aria-live="polite">
           <h2 style={{ marginBottom: 8 }}>تفاصيل الطلب</h2>
           <p><strong>كود الطلب:</strong> {orderInfo.orderCode}</p>
           <p><strong>اسم العميل:</strong> {orderInfo.customerName}</p>

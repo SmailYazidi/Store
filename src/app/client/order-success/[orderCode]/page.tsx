@@ -28,8 +28,12 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
         if (!res.ok) throw new Error("لم يتم العثور على الطلب")
         const data = await res.json()
         setOrder(data)
-      } catch (err: any) {
-        toast.error(err.message || "حدث خطأ أثناء جلب الطلب")
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          toast.error(err.message)
+        } else {
+          toast.error("حدث خطأ أثناء جلب الطلب")
+        }
         router.push("/")
       } finally {
         setLoading(false)

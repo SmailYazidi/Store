@@ -26,7 +26,7 @@ export default function VerifyOrderPage() {
         } else {
           setOrder(data)
         }
-      } catch (err) {
+      } catch (err) {OrderStatus
         setError("فشل الاتصال بالخادم")
       } finally {
         setLoading(false)

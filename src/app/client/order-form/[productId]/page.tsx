@@ -43,8 +43,12 @@ export default function OrderFormPage() {
         }
 
         setProduct(data)
-      } catch (err: any) {
-        setError(err.message || "حدث خطأ")
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message)
+        } else {
+          setError("حدث خطأ غير معروف")
+        }
       } finally {
         setLoading(false)
       }
@@ -75,10 +79,13 @@ export default function OrderFormPage() {
 
       if (!res.ok) throw new Error(data.error || "فشل إنشاء الطلب")
 
-      // ✅ الانتقال إلى صفحة التحقق
       router.push(`/client/verify/${data.orderCode}`)
-    } catch (err: any) {
-      alert(err.message || "حدث خطأ")
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(err.message)
+      } else {
+        alert("حدث خطأ غير معروف")
+      }
     } finally {
       setSubmitting(false)
     }

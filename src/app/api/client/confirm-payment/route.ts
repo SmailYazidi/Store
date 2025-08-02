@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: Request) {
   try {
-    const { orderCode } = await req.json()
+    const { orderCode }: { orderCode: string } = await req.json()
 
     if (!orderCode) {
       return NextResponse.json({ message: "Missing orderCode" }, { status: 400 })
@@ -71,8 +71,13 @@ export async function POST(req: Request) {
     )
 
     return NextResponse.json({ sessionId: session.id })
-  } catch (error: any) {
-    console.error("Confirm payment error:", error)
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Confirm payment error:", error.message)
+    } else {
+      console.error("Confirm payment error:", error)
+    }
+
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }

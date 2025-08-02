@@ -1,7 +1,19 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+
+interface LocalizedString {
+  ar: string
+  fr: string
+}
+
+interface Product {
+  _id: string
+  name: LocalizedString
+  // أضف خصائص أخرى حسب الحاجة، مثلاً:
+  // price: number
+  // mainImage: string
+}
 
 interface CategoryPageProps {
   params: {
@@ -10,7 +22,7 @@ interface CategoryPageProps {
 }
 
 export default function CategoryPage({ params }: CategoryPageProps) {
-  const [products, setProducts] = useState<any[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,7 +48,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       <h1>Products in Category {params.id}</h1>
       <ul>
         {products.map((product) => (
-          <li key={product._id}>{product.name?.ar || product.name?.fr || "Unnamed"}</li>
+          <li key={product._id}>{product.name.ar || product.name.fr || "Unnamed"}</li>
         ))}
       </ul>
     </div>

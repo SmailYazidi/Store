@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { loadStripe } from "@stripe/stripe-js"
 import { toast } from "sonner"
@@ -22,12 +22,16 @@ export default function PaymentPage({ params }: { params: { orderCode: string } 
 
       const data = await res.json()
 
-      if (!res.ok || !data.sessionId) throw new Error(data.message || "Something went wrong")
+      if (!res.ok || !data.sessionId) throw new Error(data.message || "حدث خطأ")
 
       const stripe = await stripePromise
       await stripe?.redirectToCheckout({ sessionId: data.sessionId })
-    } catch (err: any) {
-      toast.error(err.message || "Failed to start payment")
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message)
+      } else {
+        toast.error("فشل بدء الدفع")
+      }
     } finally {
       setLoading(false)
     }

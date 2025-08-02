@@ -3,6 +3,14 @@ import { v4 as uuidv4 } from "uuid"
 import clientPromise from "@/lib/mongodb"
 import { OrderStatus } from "@/lib/models"
 
+interface CreateOrderRequestBody {
+  customerName: string
+  customerPhone: string
+  customerEmail: string
+  customerAddress: string
+  productId: string
+}
+
 export async function POST(req: Request) {
   try {
     const {
@@ -10,15 +18,15 @@ export async function POST(req: Request) {
       customerPhone,
       customerEmail,
       customerAddress,
-      productId
-    } = await req.json()
+      productId,
+    }: CreateOrderRequestBody = await req.json()
 
     if (!customerName || !customerPhone || !customerEmail || !customerAddress || !productId) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 })
     }
 
     const client = await clientPromise
-    const db = client.db() // Use default DB from MONGODB_URI or specify your DB name here
+    const db = client.db()
 
     const product = await db.collection("products").findOne({ _id: productId })
 
@@ -26,10 +34,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Product not available" }, { status: 400 })
     }
 
-    // Generate unique order code
     const orderCode = uuidv4().replace(/-/g, "").slice(0, 16).toUpperCase()
 
-    // Create order with status payment_pending
     const order = {
       orderCode,
       customerName,
@@ -48,20 +54,22 @@ export async function POST(req: Request) {
       updatedAt: new Date(),
     }
 
-    // Insert the order
     await db.collection("orders").insertOne(order)
 
-    // Decrement product quantity atomically
     await db.collection("products").updateOne(
       { _id: productId, quantity: { $gt: 0 } },
       { $inc: { quantity: -1 } }
     )
 
-    // TODO: send verification email with orderCode here if needed
+    // TODO: إرسال بريد تحقق مع orderCode إذا لزم الأمر
 
     return NextResponse.json({ orderCode }, { status: 201 })
-  } catch (error: any) {
-    console.error("Create order error:", error)
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Create order error:", error.message)
+    } else {
+      console.error("Create order error:", error)
+    }
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }
