@@ -1,47 +1,60 @@
-import { NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
-import clientPromise from "@/lib/mongodb"
+import { type NextRequest, NextResponse } from "next/server"
+import { connectDB } from "@/lib/mongodb"
+import { verifyPassword, generateToken } from "@/lib/auth"
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { password } = await request.json()
+    const { username, password } = await request.json()
 
-    const client = await clientPromise
-    const db = client.db("store")
-
-    // Get admin password from database
-    const adminData = await db.collection("adminpassword").findOne({})
-
-    if (!adminData) {
-      // Create default admin password if none exists
-      const hashedPassword = await bcrypt.hash("admin123", 10)
-      await db.collection("adminpassword").insertOne({
-        password: hashedPassword,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-
-      // Check if the provided password matches the default
-      const isValid = await bcrypt.compare(password, hashedPassword)
-      if (isValid) {
-        return NextResponse.json({
-          message: "Login successful",
-          token: "admin-token-" + Date.now(),
-        })
-      }
-    } else {
-      const isValid = await bcrypt.compare(password, adminData.password)
-      if (isValid) {
-        return NextResponse.json({
-          message: "Login successful",
-          token: "admin-token-" + Date.now(),
-        })
-      }
+    if (!username || !password) {
+      return NextResponse.json({ error: "اسم المستخدم وكلمة المرور مطلوبان" }, { status: 400 })
     }
 
-    return NextResponse.json({ message: "Invalid password" }, { status: 401 })
+    const db = await connectDB()
+    const admin = await db.collection("admins").findOne({
+      $or: [{ username }, { email: username }],
+    })
+
+    if (!admin) {
+      return NextResponse.json({ error: "بيانات الدخول غير صحيحة" }, { status: 401 })
+    }
+
+    const isValidPassword = await verifyPassword(password, admin.passwordHash)
+    if (!isValidPassword) {
+      return NextResponse.json({ error: "بيانات الدخول غير صحيحة" }, { status: 401 })
+    }
+
+    const token = generateToken({
+      id: admin._id.toString(),
+      username: admin.username,
+      email: admin.email,
+    })
+
+    const response = NextResponse.json({
+      success: true,
+      user: {
+        id: admin._id.toString(),
+        username: admin.username,
+        email: admin.email,
+      },
+    })
+
+    response.cookies.set("admin-token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60, // 24 hours
+    })
+
+    return response
   } catch (error) {
-    console.error("Error in admin login:", error)
-    return NextResponse.json({ error: "Login failed" }, { status: 500 })
+    console.error("Login error:", error)
+    return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 })
   }
+}
+
+export async function DELETE(request: NextRequest) {
+  const response = NextResponse.json({ success: true })
+  response.cookies.delete("admin-token")
+  return response
 }
