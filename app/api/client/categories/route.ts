@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server"
 import { connectDB } from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
-import { validateCategoryInput } from "@/lib/validation" // Assume you have validation utilities
 
 interface CategoryName {
   ar: string
   fr: string
-  en?: string // Added English as optional
+  en?: string
 }
 
 interface Category {
@@ -18,41 +17,100 @@ interface Category {
   updatedAt: Date
 }
 
-export async function GET() {
+// Inline validation functions
+const validateObjectId = (id: string): boolean => {
+  return ObjectId.isValid(id) && new ObjectId(id).toString() === id
+}
+
+const validateCategoryInput = (body: any): { valid: boolean; errors?: string[] } => {
+  const errors: string[] = []
+  
+  if (!body?.name?.ar) {
+    errors.push("Arabic name (name.ar) is required")
+  }
+  
+  if (body.slug && typeof body.slug !== 'string') {
+    errors.push("Slug must be a string")
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors: errors.length > 0 ? errors : undefined
+  }
+}
+
+const generateSlug = (name: string): string => {
+  return name
+    .toLowerCase()
+    .replace(/[^\w\u0600-\u06FF]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .trim()
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
+    // Validate ID format
+    if (!validateObjectId(params.id)) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: "Invalid category ID format",
+          code: "INVALID_ID_FORMAT"
+        },
+        { status: 400 }
+      )
+    }
+
     const db = await connectDB()
+    const category = await db.collection<Category>("categories").findOne(
+      { _id: new ObjectId(params.id) },
+      { 
+        projection: {
+          "name.ar": 1,
+          "name.fr": 1,
+          "name.en": 1,
+          slug: 1,
+          imageUrl: 1,
+          isActive: 1,
+          createdAt: 1,
+          updatedAt: 1
+        }
+      }
+    )
 
-    const categories = await db.collection<Category>("categories")
-      .find({ 
-        // isActive: true // Uncomment to only fetch active categories
-      })
-      .sort({ 
-        createdAt: -1,
-        // "name.ar": 1 // Alternative sorting option
-      })
-      .project({ 
-        // Custom projection to control returned fields
-        name: 1,
-        slug: 1,
-        imageUrl: 1,
-        isActive: 1,
-        createdAt: 1
-      })
-      .toArray()
+    if (!category) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: "Category not found",
+          code: "CATEGORY_NOT_FOUND"
+        },
+        { status: 404 }
+      )
+    }
 
-    return NextResponse.json({
-      success: true,
-      data: categories,
-      count: categories.length
-    })
+    return NextResponse.json(
+      { 
+        success: true,
+        data: {
+          ...category,
+          _id: category._id.toString(),
+          createdAt: category.createdAt.toISOString(),
+          updatedAt: category.updatedAt.toISOString()
+        } 
+      }
+    )
 
   } catch (error) {
-    console.error("Categories fetch error:", error)
+    console.error("Category fetch error:", error)
     return NextResponse.json(
       { 
         success: false,
-        error: "Failed to fetch categories",
-        code: "CATEGORIES_FETCH_ERROR"
+        error: "Failed to fetch category details",
+        code: "CATEGORY_FETCH_ERROR"
       },
       { status: 500 }
     )
@@ -77,35 +135,17 @@ export async function POST(request: Request) {
       )
     }
 
-    // Generate slug if not provided
-    const slug = body.slug || generateSlug(body.name.ar)
-
     const category: Category = {
       name: {
         ar: body.name.ar,
-        fr: body.name.fr || body.name.ar, // Fallback to Arabic if French not provided
-        en: body.name.en || body.name.ar  // Fallback to Arabic if English not provided
+        fr: body.name.fr || body.name.ar,
+        en: body.name.en || body.name.ar
       },
-      slug,
+      slug: body.slug || generateSlug(body.name.ar),
       imageUrl: body.imageUrl || null,
-      isActive: body.isActive !== false, // Default to true
+      isActive: body.isActive !== false,
       createdAt: new Date(),
       updatedAt: new Date()
-    }
-
-    // Check for existing category with same slug
-    const existingCategory = await db.collection("categories")
-      .findOne({ slug: category.slug })
-
-    if (existingCategory) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Category with this slug already exists",
-          code: "DUPLICATE_SLUG_ERROR"
-        },
-        { status: 409 }
-      )
     }
 
     const result = await db.collection("categories").insertOne(category)
@@ -114,8 +154,7 @@ export async function POST(request: Request) {
       {
         success: true,
         message: "Category created successfully",
-        categoryId: result.insertedId,
-        slug: category.slug
+        categoryId: result.insertedId
       },
       { status: 201 }
     )
@@ -131,13 +170,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-}
-
-// Helper function to generate slug
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^\w\u0600-\u06FF]+/g, '-') // Support Arabic characters
-    .replace(/^-+|-+$/g, '')
-    .trim()
 }

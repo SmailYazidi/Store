@@ -4,9 +4,10 @@ import type React from "react";
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react"; // حسب استخدامك للـ Loader
+import { Loader2 } from "lucide-react";
 
-export function AdminGuard({ children }: { children: React.ReactNode }) {
+// This is the component that handles admin authentication
+function AdminGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -14,14 +15,12 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    // إذا في صفحة تسجيل الدخول، لا نتحقق، نعرض المحتوى مباشرة
     if (pathname === "/admin/login") {
       setAuthenticated(true);
       setLoading(false);
       return;
     }
 
-    // تحقق من وجود الكوكي 'sessionId' على الجانب العميل
     const cookies = document.cookie.split("; ").reduce<Record<string, string>>((acc, current) => {
       const [key, value] = current.split("=");
       acc[key] = value;
@@ -31,13 +30,10 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     const sessionId = cookies.sessionId;
 
     if (!sessionId) {
-      // إذا ما في جلسة، ارسل المستخدم لصفحة تسجيل الدخول
       router.replace("/admin/login");
       return;
     }
 
-    // إذا أردت، يمكنك هنا إرسال طلب صغير لـ API للتحقق من صلاحية الجلسة
-    // لكن للبساطة هنا فقط نعتبر وجود الكوكي كدليل على تسجيل الدخول
     setAuthenticated(true);
     setLoading(false);
   }, [pathname, router]);
@@ -59,4 +55,9 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   }
 
   return null;
+}
+
+// This is the default export that Next.js expects for layout files
+export default function AdminLayoutWrapper({ children }: { children: React.ReactNode }) {
+  return <AdminGuard>{children}</AdminGuard>;
 }
