@@ -1,44 +1,25 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectDB } from "@/lib/mongodb" // ← تأكد أنه import باسم الدالة connectDB
-
-
-import { verifyPassword, generateToken } from "@/lib/auth"
+import { verifyAdminPassword, generateAdminToken } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, password } = await request.json()
+    const { password } = await request.json()
 
-    if (!username || !password) {
-      return NextResponse.json({ error: "اسم المستخدم وكلمة المرور مطلوبان" }, { status: 400 })
+    if (!password) {
+      return NextResponse.json({ error: "كلمة المرور مطلوبة" }, { status: 400 })
     }
 
-    const db = await connectDB()
-    const admin = await db.collection("admins").findOne({
-      $or: [{ username }, { email: username }],
-    })
-//sdshdsh
-    if (!admin) {
-      return NextResponse.json({ error: "بيانات الدخول غير صحيحة" }, { status: 401 })
-    }
+    const isValidPassword = await verifyAdminPassword(password)
 
-    const isValidPassword = await verifyPassword(password, admin.passwordHash)
     if (!isValidPassword) {
-      return NextResponse.json({ error: "بيانات الدخول غير صحيحة" }, { status: 401 })
+      return NextResponse.json({ error: "كلمة المرور غير صحيحة" }, { status: 401 })
     }
 
-    const token = generateToken({
-      id: admin._id.toString(),
-      username: admin.username,
-      email: admin.email,
-    })
+    const token = generateAdminToken()
 
     const response = NextResponse.json({
       success: true,
-      user: {
-        id: admin._id.toString(),
-        username: admin.username,
-        email: admin.email,
-      },
+      message: "تم تسجيل الدخول بنجاح",
     })
 
     response.cookies.set("admin-token", token, {
@@ -46,6 +27,7 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 24 * 60 * 60, // 24 hours
+      path: "/",
     })
 
     return response
@@ -56,7 +38,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const response = NextResponse.json({ success: true })
+  const response = NextResponse.json({ success: true, message: "تم تسجيل الخروج بنجاح" })
   response.cookies.delete("admin-token")
   return response
 }

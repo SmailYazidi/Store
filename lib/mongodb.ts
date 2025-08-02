@@ -1,4 +1,3 @@
-// lib/mongodb.ts
 import { MongoClient } from "mongodb"
 
 if (!process.env.MONGODB_URI) {
@@ -26,8 +25,4 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect()
 }
 
-// ✅ هنا المشكلة التي كانت عندك: تأكد أن هذه موجودة
-export async function connectDB() {
-  const client = await clientPromise
-  return client.db("store") // ← غير اسم قاعدة البيانات لو كانت مختلفة
-}
+export default clientPromise

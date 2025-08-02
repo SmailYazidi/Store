@@ -2,24 +2,18 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Package, ShoppingCart, Tags, TrendingUp } from "lucide-react"
+import { ShoppingCart, Package, FolderOpen, DollarSign, TrendingUp, Loader2 } from "lucide-react"
+import Link from "next/link"
 
 interface DashboardStats {
   totalOrders: number
   totalProducts: number
   totalCategories: number
+  totalRevenue: number
   ordersByStatus: Record<string, number>
-  recentOrders: Array<{
-    _id: string
-    orderCode: string
-    customerName: string
-    productName: string
-    status: string
-    createdAt: string
-    productPrice: number
-    productCurrency: string
-  }>
+  recentOrders: any[]
 }
 
 const statusColors: Record<string, string> = {
@@ -43,51 +37,33 @@ const statusLabels: Record<string, string> = {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
 
   useEffect(() => {
-    fetchDashboardStats()
+    fetchStats()
   }, [])
 
-  const fetchDashboardStats = async () => {
+  const fetchStats = async () => {
     try {
-      const [ordersRes, productsRes, categoriesRes] = await Promise.all([
-        fetch("/api/admin/orders?limit=5"),
-        fetch("/api/admin/products?limit=1"),
-        fetch("/api/admin/categories"),
-      ])
+      const response = await fetch("/api/admin/dashboard")
+      if (!response.ok) throw new Error("فشل في جلب الإحصائيات")
 
-      if (!ordersRes.ok || !productsRes.ok || !categoriesRes.ok) {
-        throw new Error("فشل في جلب البيانات")
-      }
-
-      const [ordersData, productsData, categoriesData] = await Promise.all([
-        ordersRes.json(),
-        productsRes.json(),
-        categoriesRes.json(),
-      ])
-
-      // Calculate order statistics
-      const ordersByStatus: Record<string, number> = {}
-      const allOrdersRes = await fetch("/api/admin/orders?limit=1000")
-      const allOrdersData = await allOrdersRes.json()
-
-      allOrdersData.orders?.forEach((order: any) => {
-        ordersByStatus[order.status] = (ordersByStatus[order.status] || 0) + 1
-      })
-
-      setStats({
-        totalOrders: allOrdersData.pagination?.total || 0,
-        totalProducts: productsData.pagination?.total || 0,
-        totalCategories: categoriesData.categories?.length || 0,
-        ordersByStatus,
-        recentOrders: ordersData.orders || [],
-      })
-    } catch (err: any) {
-      setError(err.message)
+      const data = await response.json()
+      setStats(data.stats)
+    } catch (error) {
+      console.error("Error fetching stats:", error)
     } finally {
       setLoading(false)
     }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("ar-SA", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
   }
 
   if (loading) {
@@ -98,10 +74,6 @@ export default function AdminDashboard() {
     )
   }
 
-  if (error) {
-    return <div className="text-center text-red-600 p-4">خطأ: {error}</div>
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -109,7 +81,7 @@ export default function AdminDashboard() {
         <p className="text-gray-600">مرحباً بك في لوحة تحكم المسؤول</p>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -118,6 +90,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalOrders || 0}</div>
+            <p className="text-xs text-muted-foreground">جميع الطلبات</p>
           </CardContent>
         </Card>
 
@@ -128,76 +101,124 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalProducts || 0}</div>
+            <p className="text-xs text-muted-foreground">منتج متاح</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي التصنيفات</CardTitle>
-            <Tags className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">التصنيفات</CardTitle>
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalCategories || 0}</div>
+            <p className="text-xs text-muted-foreground">تصنيف نشط</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">الطلبات النشطة</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">إجمالي الإيرادات</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {(stats?.ordersByStatus["Processing"] || 0) + (stats?.ordersByStatus["Payment Pending"] || 0)}
+            <div className="text-2xl font-bold">{stats?.totalRevenue?.toFixed(2) || "0.00"} €</div>
+            <p className="text-xs text-muted-foreground">من الطلبات المكتملة</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Order Status Distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle>توزيع حالات الطلبات</CardTitle>
+            <CardDescription>عدد الطلبات حسب الحالة</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {Object.entries(stats?.ordersByStatus || {}).map(([status, count]) => (
+                <div key={status} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${statusColors[status] || "bg-gray-500"}`} />
+                    <span className="text-sm">{statusLabels[status] || status}</span>
+                  </div>
+                  <Badge variant="secondary">{count}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Orders */}
+        <Card>
+          <CardHeader>
+            <CardTitle>الطلبات الأخيرة</CardTitle>
+            <CardDescription>آخر 5 طلبات</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stats?.recentOrders?.length ? (
+                stats.recentOrders.map((order) => (
+                  <div key={order._id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{order.orderCode}</div>
+                      <div className="text-xs text-gray-500">{order.customerName}</div>
+                      <div className="text-xs text-gray-400">{formatDate(order.createdAt)}</div>
+                    </div>
+                    <div className="text-right">
+                      <Badge
+                        variant="secondary"
+                        className={`${statusColors[order.status] || "bg-gray-500"} text-white`}
+                      >
+                        {statusLabels[order.status] || order.status}
+                      </Badge>
+                      <div className="text-sm font-medium mt-1">
+                        {order.productPrice} {order.productCurrency}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">لا توجد طلبات</div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Order Status Distribution */}
+      {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>توزيع حالات الطلبات</CardTitle>
+          <CardTitle>الإجراءات السريعة</CardTitle>
+          <CardDescription>الوصول السريع للوظائف الأساسية</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {Object.entries(stats?.ordersByStatus || {}).map(([status, count]) => (
-              <div key={status} className="text-center">
-                <div className="text-2xl font-bold">{count}</div>
-                <Badge variant="secondary" className={`${statusColors[status]} text-white`}>
-                  {statusLabels[status] || status}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Orders */}
-      <Card>
-        <CardHeader>
-          <CardTitle>الطلبات الأخيرة</CardTitle>
-          <CardDescription>آخر 5 طلبات تم إنشاؤها</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {stats?.recentOrders.map((order) => (
-              <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <div className="font-medium">{order.orderCode}</div>
-                  <div className="text-sm text-gray-600">{order.customerName}</div>
-                  <div className="text-sm text-gray-500">{order.productName}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-medium">
-                    {order.productPrice} {order.productCurrency}
-                  </div>
-                  <Badge variant="secondary" className={`${statusColors[order.status]} text-white`}>
-                    {statusLabels[order.status] || order.status}
-                  </Badge>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
+              <Link href="/admin/orders">
+                <ShoppingCart className="h-6 w-6 mb-2" />
+                إدارة الطلبات
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
+              <Link href="/admin/products">
+                <Package className="h-6 w-6 mb-2" />
+                إدارة المنتجات
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
+              <Link href="/admin/categories">
+                <FolderOpen className="h-6 w-6 mb-2" />
+                إدارة التصنيفات
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
+              <Link href="/admin/account">
+                <TrendingUp className="h-6 w-6 mb-2" />
+                إعدادات الحساب
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
