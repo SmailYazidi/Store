@@ -1,56 +1,42 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { verifyPassword, generateToken } from "@/lib/auth"
+import { connectDB } from "@/lib/mongodb"
 
-const hardcodedAdmin = {
-  _id: "688e631eb5e25dc30fcdf14c",
-  username: "admin",
-  email: "admin@store.com",
-  passwordHash: "$2a$12$9hJvlE5Wh3uJP3pyDVPX6.8DKK8zIx5avJBIavUXSgfQhfZTGhnLC", // bcrypt hash for "admin"
-  createdAt: new Date(1754092800000),
-  updatedAt: new Date(1754092800000),
-}
+import { verifyPassword, generateToken } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json()
 
     if (!username || !password) {
-      return NextResponse.json(
-        { error: "اسم المستخدم وكلمة المرور مطلوبان" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "اسم المستخدم وكلمة المرور مطلوبان" }, { status: 400 })
     }
 
-    const inputMatches =
-      username === hardcodedAdmin.username || username === hardcodedAdmin.email
-
-    if (!inputMatches) {
-      return NextResponse.json(
-        { error: "بيانات الدخول غير صحيحة" },
-        { status: 401 }
-      )
+    const db = await connectDB()
+    const admin = await db.collection("admins").findOne({
+      $or: [{ username }, { email: username }],
+    })
+//sdshdsh
+    if (!admin) {
+      return NextResponse.json({ error: "بيانات الدخول غير صحيحة" }, { status: 401 })
     }
 
-    const isValidPassword = await verifyPassword(password, hardcodedAdmin.passwordHash)
+    const isValidPassword = await verifyPassword(password, admin.passwordHash)
     if (!isValidPassword) {
-      return NextResponse.json(
-        { error: "بيانات الدخول غير صحيحة" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "بيانات الدخول غير صحيحة" }, { status: 401 })
     }
 
     const token = generateToken({
-      id: hardcodedAdmin._id,
-      username: hardcodedAdmin.username,
-      email: hardcodedAdmin.email,
+      id: admin._id.toString(),
+      username: admin.username,
+      email: admin.email,
     })
 
     const response = NextResponse.json({
       success: true,
       user: {
-        id: hardcodedAdmin._id,
-        username: hardcodedAdmin.username,
-        email: hardcodedAdmin.email,
+        id: admin._id.toString(),
+        username: admin.username,
+        email: admin.email,
       },
     })
 

@@ -25,4 +25,8 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect()
 }
 
-export default clientPromise
+// ✅ التعديل هنا: تصدير دالة connectDB بدلًا من clientPromise مباشرة
+export async function connectDB() {
+  const client = await clientPromise
+  return client.db() // يمكنك تحديد اسم قاعدة البيانات هنا مثل: client.db("store")
+}
