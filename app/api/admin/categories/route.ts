@@ -1,18 +1,28 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
-import { getAdminFromRequest } from "@/lib/auth"
+import { connectDB } from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
+
+async function verifyAdminSession(request: NextRequest) {
+  const sessionId = request.cookies.get("sessionId")?.value
+  if (!sessionId) return null
+
+  const db = await connectDB()
+  const session = await db.collection("sessions").findOne({ _id: sessionId })
+  if (!session) return null
+
+  const admin = await db.collection("admins").findOne({ _id: new ObjectId(session.adminId) })
+  return admin
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
+    const admin = await verifyAdminSession(request)
     if (!admin) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB()
 
-    // Get categories with product count
     const categories = await db
       .collection("categories")
       .aggregate([
@@ -47,21 +57,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
+    const admin = await verifyAdminSession(request)
     if (!admin) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
     const categoryData = await request.json()
 
-    // Validate required fields
     if (!categoryData.name?.ar || !categoryData.name?.fr) {
       return NextResponse.json({ error: "اسم التصنيف باللغتين مطلوب" }, { status: 400 })
     }
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB()
 
-    // Check if category already exists
     const existingCategory = await db.collection("categories").findOne({
       $or: [{ "name.ar": categoryData.name.ar }, { "name.fr": categoryData.name.fr }],
     })
@@ -88,7 +96,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
+    const admin = await verifyAdminSession(request)
     if (!admin) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
@@ -99,11 +107,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "معرف التصنيف مطلوب" }, { status: 400 })
     }
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB()
 
     updateData.updatedAt = new Date()
 
-    const result = await db.collection("categories").updateOne({ _id: new ObjectId(categoryId) }, { $set: updateData })
+    const result = await db
+      .collection("categories")
+      .updateOne({ _id: new ObjectId(categoryId) }, { $set: updateData })
 
     if (result.matchedCount === 0) {
       return NextResponse.json({ error: "التصنيف غير موجود" }, { status: 404 })
@@ -118,7 +128,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
+    const admin = await verifyAdminSession(request)
     if (!admin) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
@@ -130,9 +140,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "معرف التصنيف مطلوب" }, { status: 400 })
     }
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB()
 
-    // Check if category has products
     const productCount = await db.collection("products").countDocuments({
       categoryId: new ObjectId(categoryId),
     })
@@ -142,7 +151,7 @@ export async function DELETE(request: NextRequest) {
         {
           error: `لا يمكن حذف التصنيف لأنه يحتوي على ${productCount} منتج`,
         },
-        { status: 400 },
+        { status: 400 }
       )
     }
 

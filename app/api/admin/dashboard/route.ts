@@ -1,17 +1,21 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
-import { getAdminFromRequest } from "@/lib/auth"
+import { type NextRequest, NextResponse } from "next/server";
+import { connectDB } from "@/lib/mongodb";
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
-    if (!admin) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
+    const sessionId = request.cookies.get("sessionId")?.value;
+
+    if (!sessionId) {
+      return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
     }
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB();
 
-    // Get statistics
+    const session = await db.collection("sessions").findOne({ _id: sessionId });
+    if (!session) {
+      return NextResponse.json({ error: "جلسة غير صالحة" }, { status: 401 });
+    }
+
     const [totalOrders, totalProducts, totalCategories, ordersByStatus, recentOrders] = await Promise.all([
       db.collection("orders").countDocuments(),
       db.collection("products").countDocuments(),
@@ -28,9 +32,8 @@ export async function GET(request: NextRequest) {
         ])
         .toArray(),
       db.collection("orders").find().sort({ createdAt: -1 }).limit(5).toArray(),
-    ])
+    ]);
 
-    // Calculate revenue (mock calculation)
     const totalRevenue = await db
       .collection("orders")
       .aggregate([
@@ -42,26 +45,23 @@ export async function GET(request: NextRequest) {
           },
         },
       ])
-      .toArray()
+      .toArray();
 
     const stats = {
       totalOrders,
       totalProducts,
       totalCategories,
       totalRevenue: totalRevenue[0]?.total || 0,
-      ordersByStatus: ordersByStatus.reduce(
-        (acc, item) => {
-          acc[item._id] = item.count
-          return acc
-        },
-        {} as Record<string, number>,
-      ),
+      ordersByStatus: ordersByStatus.reduce((acc, item) => {
+        acc[item._id] = item.count;
+        return acc;
+      }, {} as Record<string, number>),
       recentOrders,
-    }
+    };
 
-    return NextResponse.json({ stats })
+    return NextResponse.json({ stats });
   } catch (error) {
-    console.error("Error fetching dashboard stats:", error)
-    return NextResponse.json({ error: "حدث خطأ في جلب الإحصائيات" }, { status: 500 })
+    console.error("Error fetching dashboard stats:", error);
+    return NextResponse.json({ error: "حدث خطأ في جلب الإحصائيات" }, { status: 500 });
   }
 }

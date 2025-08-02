@@ -1,11 +1,20 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
-
+import { connectDB } from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
+
+// دالة للتحقق من صلاحية الجلسة (admin) عبر sessionId في الكوكيز
+async function verifyAdmin(request: NextRequest) {
+  const sessionId = request.cookies.get("sessionId")?.value
+  if (!sessionId) return null
+
+  const db = await connectDB()
+  const admin = await db.collection("admins").findOne({ sessionId })
+  return admin
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
+    const admin = await verifyAdmin(request)
     if (!admin) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
@@ -16,22 +25,27 @@ export async function GET(request: NextRequest) {
     const page = Number.parseInt(searchParams.get("page") || "1")
     const limit = Number.parseInt(searchParams.get("limit") || "10")
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB()
 
-    // Build query
     const query: any = {}
 
     if (search) {
-      query.$or = [{ "name.ar": { $regex: search, $options: "i" } }, { "name.fr": { $regex: search, $options: "i" } }]
+      query.$or = [
+        { "name.ar": { $regex: search, $options: "i" } },
+        { "name.fr": { $regex: search, $options: "i" } },
+      ]
     }
 
     if (categoryId && categoryId !== "all") {
-      query.categoryId = categoryId
+      try {
+        query.categoryId = new ObjectId(categoryId)
+      } catch {
+        return NextResponse.json({ error: "معرف التصنيف غير صالح" }, { status: 400 })
+      }
     }
 
     const skip = (page - 1) * limit
 
-    // Get products with category info
     const products = await db
       .collection("products")
       .aggregate([
@@ -72,22 +86,25 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
+    const admin = await verifyAdmin(request)
     if (!admin) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
     const productData = await request.json()
 
-    // Validate required fields
     if (!productData.name?.ar || !productData.name?.fr || !productData.price || !productData.categoryId) {
       return NextResponse.json({ error: "البيانات المطلوبة ناقصة" }, { status: 400 })
     }
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB()
 
-    // Convert categoryId to ObjectId
-    productData.categoryId = new ObjectId(productData.categoryId)
+    try {
+      productData.categoryId = new ObjectId(productData.categoryId)
+    } catch {
+      return NextResponse.json({ error: "معرف التصنيف غير صالح" }, { status: 400 })
+    }
+
     productData.createdAt = new Date()
     productData.updatedAt = new Date()
 
@@ -106,7 +123,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
+    const admin = await verifyAdmin(request)
     if (!admin) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
@@ -117,11 +134,14 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "معرف المنتج مطلوب" }, { status: 400 })
     }
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB()
 
-    // Convert categoryId to ObjectId if provided
     if (updateData.categoryId) {
-      updateData.categoryId = new ObjectId(updateData.categoryId)
+      try {
+        updateData.categoryId = new ObjectId(updateData.categoryId)
+      } catch {
+        return NextResponse.json({ error: "معرف التصنيف غير صالح" }, { status: 400 })
+      }
     }
 
     updateData.updatedAt = new Date()
@@ -141,7 +161,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request)
+    const admin = await verifyAdmin(request)
     if (!admin) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
@@ -153,7 +173,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "معرف المنتج مطلوب" }, { status: 400 })
     }
 
-    const { db } = await connectToDatabase()
+    const db = await connectDB()
 
     const result = await db.collection("products").deleteOne({ _id: new ObjectId(productId) })
 
