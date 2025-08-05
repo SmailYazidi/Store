@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import AdminDashboard from "./main/dashboard"
+import AdminDashboard from "./main/page"
 import Loading from '@/components/Loading';
 interface AdminLayoutProps {
   children: React.ReactNode

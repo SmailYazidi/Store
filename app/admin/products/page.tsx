@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Edit, Trash2, Eye } from "lucide-react";
+import Loading from '@/components/Loading';
 
 type Product = {
   _id: string;
@@ -97,9 +98,7 @@ export default function ProductsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
+<Loading/>
     );
   }
 

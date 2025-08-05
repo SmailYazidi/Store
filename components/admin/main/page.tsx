@@ -70,7 +70,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-10 max-w-7xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold">لوحة التحكم</h1>
         <p className="text-gray-600">مرحباً بك في لوحة تحكم المسؤول</p>

@@ -25,7 +25,7 @@ export default function Admin() {
 
       <div className="flex-1 flex flex-col">
         <AdminHeader onMenuClick={() => setIsSidebarOpen(prev => !prev)} />
-        <AdminMain />
+        <AdminMain/>
       </div>
     </div>
   )

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Loader2, User, Mail, Calendar, Lock } from "lucide-react"
-
+import Loading from '@/components/Loading';
 interface AdminAccount {
   id: string
   username: string
@@ -97,9 +97,7 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+     <Loading/>
     )
   }
 
