@@ -49,7 +49,7 @@ const ClientMain = () => {
   }
 
   return (
-    <main className="p-4 bg-white text-black min-h-screen">
+    <main className="p-4 pt-25 bg-white text-black min-h-screen">
       {categories.map((category) => {
         const categoryProducts = products.filter(
           (product) => product.categoryId === category._id && product.isVisible
