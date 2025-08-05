@@ -69,6 +69,7 @@
     "react-hook-form": "^7.60.0",
     "react-hot-toast": "latest",
     "react-resizable-panels": "^2.1.7",
+    "react-toastify": "^11.0.5",
     "recharts": "2.15.4",
     "snappy": "latest",
     "socks": "latest",
