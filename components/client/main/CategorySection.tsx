@@ -5,8 +5,10 @@ import Image from "next/image"
 import { ArrowRight } from "lucide-react"
 import { Category, Product } from "@/lib/models"
 import AnimatedText from "./AnimatedText" // Make sure this component is imported
+ const BLOB_BASE_URL = "https://eck8qyrhkuou6duk.public.blob.vercel-storage.com/";
 
 const CategorySection = ({
+ 
   category,
   products,
 }: {
@@ -41,7 +43,7 @@ const CategorySection = ({
               <div className="bg-white rounded shadow p-3 text-center">
                 <div className="w-full h-32 relative mb-2">
                   <Image
-                    src={product.mainImage}
+               src={`${BLOB_BASE_URL}${product.mainImage}`}
                     alt={product.name.fr}
                     fill
                     className="object-cover rounded"
