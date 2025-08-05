@@ -34,23 +34,16 @@ export async function GET(request: Request) {
     // Get total count for pagination
     const total = await db.collection('orders').countDocuments(query);
 
-    // Populate product details (if needed)
+    // Populate product and customer details
     const ordersWithDetails = await Promise.all(
       orders.map(async (order) => {
-        const productDetails = await Promise.all(
-          order.items.map(async (item: any) => {
-            const product = await db
-              .collection('products')
-              .findOne({ _id: new ObjectId(item.productId) });
-            return {
-              ...item,
-              productName: product?.name?.fr || 'Unknown Product',
-              productImage: product?.mainImage || '',
-            };
-          })
-        );
-        
-        const customer = order.customerId 
+        // Fetch product details
+        const product = await db
+          .collection('products')
+          .findOne({ _id: new ObjectId(order.productId) });
+
+        // Fetch customer details
+        const customer = order.customerId
           ? await db
               .collection('users')
               .findOne({ _id: new ObjectId(order.customerId) })
@@ -58,9 +51,10 @@ export async function GET(request: Request) {
 
         return {
           ...order,
-          items: productDetails,
-          customerName: customer?.name || 'Guest',
-          customerEmail: customer?.email || '',
+          productName: product?.name?.fr || order.productName?.fr || 'Unknown Product',
+          productImage: product?.mainImage || order.productImage || '',
+          customerName: customer?.name || order.customerName || 'Guest',
+          customerEmail: customer?.email || order.customerEmail || '',
         };
       })
     );
