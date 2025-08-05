@@ -57,7 +57,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <AdminSidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
 
       <div className="lg:pl-64">
