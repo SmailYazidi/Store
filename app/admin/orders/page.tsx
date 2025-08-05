@@ -1,314 +1,337 @@
-"use client"
+// /app/admin/orders/page.tsx
+"use client";
 
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Loader2, Search, Eye, Trash2, RefreshCw } from "lucide-react"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Eye, Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
 
-interface Order {
-  _id: string
-  orderCode: string
-  customerName: string
-  customerEmail: string
-  customerPhone: string
-  customerAddress: string
-  productName: string
-  productPrice: number
-  productCurrency: string
-  quantity: number
-  status: string
-  createdAt: string
-  updatedAt: string
-  paymentIntentId?: string
-}
+type Order = {
+  _id: string;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  status: string;
+  totalAmount: number;
+  currency: string;
+  createdAt: string;
+  items: {
+    productId: string;
+    productName: string;
+    productImage: string;
+    quantity: number;
+    price: number;
+  }[];
+};
+
+type Pagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
 
 const statusOptions = [
-  { value: "all", label: "جميع الحالات" },
-  { value: "Processing", label: "قيد المعالجة" },
-  { value: "Payment Pending", label: "في انتظار الدفع" },
-  { value: "Paid", label: "مدفوع" },
-  { value: "Confirmed", label: "مؤكد" },
-  { value: "Rejected", label: "مرفوض" },
-  { value: "Delivered", label: "تم التسليم" },
-]
-
-const statusColors: Record<string, string> = {
-  Processing: "bg-blue-500",
-  "Payment Pending": "bg-yellow-500",
-  Paid: "bg-green-500",
-  Confirmed: "bg-emerald-500",
-  Rejected: "bg-red-500",
-  Delivered: "bg-purple-500",
-}
+  "all",
+  "pending",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+];
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null)
-  const [updating, setUpdating] = useState<string | null>(null)
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
+
+  const fetchOrders = async (page = 1) => {
+    try {
+      setLoading(true);
+      let url = `/api/admin/orders?page=${page}&limit=${pagination.limit}`;
+      
+      if (statusFilter !== "all") {
+        url += `&status=${statusFilter}`;
+      }
+      
+      if (searchTerm) {
+        url += `&search=${searchTerm}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.success) {
+        setOrders(data.data);
+        setPagination(data.pagination);
+      } else {
+        setError(data.error || "Failed to fetch orders");
+      }
+    } catch (err) {
+      setError("An error occurred while fetching orders");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchOrders()
-  }, [searchTerm, statusFilter])
-
-  const fetchOrders = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (searchTerm) params.append("search", searchTerm)
-      if (statusFilter !== "all") params.append("status", statusFilter)
-
-      const response = await fetch(`/api/admin/orders?${params}`)
-      if (!response.ok) throw new Error("فشل في جلب الطلبات")
-
-      const data = await response.json()
-      setOrders(data.orders)
-    } catch (error) {
-      console.error("Error fetching orders:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    setUpdating(orderId)
-    try {
-      const response = await fetch("/api/admin/orders", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, status: newStatus }),
-      })
-
-      if (!response.ok) throw new Error("فشل في تحديث الطلب")
-
-      await fetchOrders()
-    } catch (error) {
-      console.error("Error updating order:", error)
-    } finally {
-      setUpdating(null)
-    }
-  }
-
-  const deleteOrder = async (orderId: string) => {
-    try {
-      const response = await fetch(`/api/admin/orders?id=${orderId}`, {
-        method: "DELETE",
-      })
-
-      if (!response.ok) throw new Error("فشل في حذف الطلب")
-
-      await fetchOrders()
-      setDeleteOrderId(null)
-    } catch (error) {
-      console.error("Error deleting order:", error)
-    }
-  }
+    fetchOrders();
+  }, [statusFilter, searchTerm]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ar-SA", {
+    return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "processing":
+        return "bg-blue-100 text-blue-800";
+      case "shipped":
+        return "bg-purple-100 text-purple-800";
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-4">{error}</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">إدارة الطلبات</h1>
-        <p className="text-gray-600">إدارة وتتبع جميع الطلبات</p>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Order Management</h1>
+
+      {/* Search and Filters */}
+      <div className="mb-6 bg-white rounded-lg shadow p-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search orders..."
+              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+          >
+            <Filter size={18} />
+            Filters
+            {showFilters ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+        </div>
+
+        {showFilters && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="w-full sm:w-1/3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>البحث والتصفية</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="البحث بكود الطلب، اسم العميل، البريد الإلكتروني..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={fetchOrders} variant="outline">
-              <RefreshCw className="h-4 w-4 ml-2" />
-              تحديث
-            </Button>
+      {/* Orders Table */}
+      <div className="overflow-x-auto bg-white rounded-lg shadow">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Order #
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Customer
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Items
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {orders.map((order) => (
+              <tr key={order._id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    #{order.orderNumber}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    {order.customerName}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {order.customerEmail}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDate(order.createdAt)}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="text-sm text-gray-900">
+                    {order.items.reduce((sum, item) => sum + item.quantity, 0)} items
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  {order.totalAmount.toFixed(2)} {order.currency}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                      order.status
+                    )}`}
+                  >
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <Link
+                    href={`/admin/orders/${order._id}`}
+                    className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+                  >
+                    <Eye size={16} /> View
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Pagination */}
+        {orders.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">
+            No orders found
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Orders List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>قائمة الطلبات</CardTitle>
-          <CardDescription>{orders.length} طلب</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
+        ) : (
+          <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => fetchOrders(pagination.page - 1)}
+                disabled={pagination.page === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => fetchOrders(pagination.page + 1)}
+                disabled={pagination.page === pagination.totalPages}
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Next
+              </button>
             </div>
-          ) : orders.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">لا توجد طلبات</div>
-          ) : (
-            <div className="space-y-4">
-              {orders.map((order) => (
-                <div key={order._id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium">{order.orderCode}</span>
-                        <Badge variant="secondary" className={`${statusColors[order.status]} text-white`}>
-                          {statusOptions.find((s) => s.value === order.status)?.label || order.status}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <div>العميل: {order.customerName}</div>
-                        <div>المنتج: {order.productName}</div>
-                        <div>
-                          السعر: {order.productPrice} {order.productCurrency}
-                        </div>
-                        <div>التاريخ: {formatDate(order.createdAt)}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Select
-                        value={order.status}
-                        onValueChange={(value) => updateOrderStatus(order._id, value)}
-                        disabled={updating === order._id}
-                      >
-                        <SelectTrigger className="w-40">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {statusOptions.slice(1).map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => setDeleteOrderId(order._id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Order Details Dialog */}
-      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>تفاصيل الطلب</DialogTitle>
-            <DialogDescription>كود الطلب: {selectedOrder?.orderCode}</DialogDescription>
-          </DialogHeader>
-          {selectedOrder && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium mb-2">معلومات العميل</h4>
-                  <div className="space-y-1 text-sm">
-                    <div>الاسم: {selectedOrder.customerName}</div>
-                    <div>البريد: {selectedOrder.customerEmail}</div>
-                    <div>الهاتف: {selectedOrder.customerPhone}</div>
-                    <div>العنوان: {selectedOrder.customerAddress}</div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">معلومات المنتج</h4>
-                  <div className="space-y-1 text-sm">
-                    <div>المنتج: {selectedOrder.productName}</div>
-                    <div>
-                      السعر: {selectedOrder.productPrice} {selectedOrder.productCurrency}
-                    </div>
-                    <div>الكمية: {selectedOrder.quantity}</div>
-                    <div>
-                      الإجمالي: {selectedOrder.productPrice * selectedOrder.quantity} {selectedOrder.productCurrency}
-                    </div>
-                  </div>
-                </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to{" "}
+                  <span className="font-medium">
+                    {Math.min(pagination.page * pagination.limit, pagination.total)}
+                  </span>{" "}
+                  of <span className="font-medium">{pagination.total}</span> orders
+                </p>
               </div>
               <div>
-                <h4 className="font-medium mb-2">معلومات الطلب</h4>
-                <div className="space-y-1 text-sm">
-                  <div>الحالة: {statusOptions.find((s) => s.value === selectedOrder.status)?.label}</div>
-                  <div>تاريخ الإنشاء: {formatDate(selectedOrder.createdAt)}</div>
-                  <div>آخر تحديث: {formatDate(selectedOrder.updatedAt)}</div>
-                  {selectedOrder.paymentIntentId && <div>معرف الدفع: {selectedOrder.paymentIntentId}</div>}
-                </div>
+                <nav
+                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                  aria-label="Pagination"
+                >
+                  <button
+                    onClick={() => fetchOrders(pagination.page - 1)}
+                    disabled={pagination.page === 1}
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  >
+                    <span className="sr-only">Previous</span>
+                    &larr;
+                  </button>
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => fetchOrders(page)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          pagination.page === page
+                            ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                            : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                  <button
+                    onClick={() => fetchOrders(pagination.page + 1)}
+                    disabled={pagination.page === pagination.totalPages}
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  >
+                    <span className="sr-only">Next</span>
+                    &rarr;
+                  </button>
+                </nav>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteOrderId} onOpenChange={() => setDeleteOrderId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-            <AlertDialogDescription>
-              هل أنت متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteOrderId && deleteOrder(deleteOrderId)}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              حذف
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }
