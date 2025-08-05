@@ -5,7 +5,7 @@ import { notFound, useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ShoppingCart, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
-
+import Loading from '@/components/Loading';
 interface LocalizedString {
   ar: string;
   fr: string;
@@ -59,7 +59,7 @@ export default function ProductPage() {
   }, [productId]);
 
   if (error) return notFound();
-  if (!product) return <div className="p-8">Loading...</div>;
+  if (!product) return <Loading />;
 
   const whatsappMessage = `Hello, I am interested in purchasing ${product.name.en || product.name.fr || product.name.ar} (${product.price} ${product.currency})`;
   const whatsappLink = `https://wa.me/212719270155?text=${encodeURIComponent(
