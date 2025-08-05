@@ -31,9 +31,9 @@ interface Category {
   updatedAt: string;
 }
 
-async function fetchCategory(id: string): Promise<Category> {
+async function fetchCategory(productId: string): Promise<Category> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/client/categories/${id}`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/client/categories/${productId}`,
     { cache: "no-store" }
   );
   if (!res.ok) throw new Error("فشل جلب بيانات التصنيف");
@@ -44,9 +44,9 @@ async function fetchCategory(id: string): Promise<Category> {
   return response.data;
 }
 
-async function fetchProducts(id: string): Promise<Product[]> {
+async function fetchProducts(productId: string): Promise<Product[]> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/client/categories/products/${id}`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/client/categories/products/${productId}`,
     {
       cache: "no-store",
       next: { tags: ["products"] },
@@ -59,12 +59,12 @@ async function fetchProducts(id: string): Promise<Product[]> {
 export default async function ProductsPage({
   params,
 }: {
-  params: { id: string };
+  params: { productId: string };
 }) {
   try {
     const [category, products] = await Promise.all([
-      fetchCategory(params.id),
-      fetchProducts(params.id),
+      fetchCategory(params.productId),
+      fetchProducts(params.productId),
     ]);
 
     return (

@@ -24,9 +24,9 @@ interface Product {
   updatedAt: string;
 }
 
-async function fetchProduct(id: string): Promise<Product> {
+async function fetchProduct(productId: string): Promise<Product> {
   const res = await fetch(
-    `/api/client/products/${id}`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/client/products/${productId}`,
     { cache: "no-store" }
   );
 
@@ -40,10 +40,10 @@ async function fetchProduct(id: string): Promise<Product> {
 export default async function ProductPage({
   params,
 }: {
-  params: { id: string };
+  params: { productId: string };
 }) {
   try {
-    const product = await fetchProduct(params.id);
+    const product = await fetchProduct(params.productId);
 
     const whatsappMessage = `Hello, I am interested in purchasing ${product.name.en || product.name.fr || product.name.ar} (${product.price} ${product.currency})`;
     const whatsappLink = `https://wa.me/212719270155?text=${encodeURIComponent(whatsappMessage)}`;
