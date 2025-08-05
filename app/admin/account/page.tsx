@@ -1,13 +1,6 @@
 "use client"
 
-import type React from "react"
-
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, User, Mail, Calendar, Lock } from "lucide-react"
 
 interface AdminAccount {
@@ -117,126 +110,106 @@ export default function AccountPage() {
         <p className="text-gray-600">إدارة معلومات حسابك وكلمة المرور</p>
       </div>
 
-      {/* Account Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>معلومات الحساب</CardTitle>
-          <CardDescription>معلومات حسابك الأساسية</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {account && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center space-x-3">
-                <User className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium">اسم المستخدم</p>
-                  <p className="text-sm text-gray-600">{account.username}</p>
-                </div>
-              </div>
+      {/* Account Info */}
+      <div className="border rounded-lg p-4 shadow-sm space-y-4">
+        <h2 className="text-xl font-semibold mb-1">معلومات الحساب</h2>
+        <p className="text-sm text-gray-500 mb-2">معلومات حسابك الأساسية</p>
 
-              <div className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium">البريد الإلكتروني</p>
-                  <p className="text-sm text-gray-600">{account.email}</p>
-                </div>
+        {account && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center space-x-3">
+              <User className="h-5 w-5 text-gray-400" />
+              <div>
+                <p className="text-sm font-medium">اسم المستخدم</p>
+                <p className="text-sm text-gray-600">{account.username}</p>
               </div>
+            </div>
 
-              <div className="flex items-center space-x-3">
-                <Calendar className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium">تاريخ إنشاء الحساب</p>
-                  <p className="text-sm text-gray-600">{formatDate(account.createdAt)}</p>
-                </div>
+            <div className="flex items-center space-x-3">
+              <Mail className="h-5 w-5 text-gray-400" />
+              <div>
+                <p className="text-sm font-medium">البريد الإلكتروني</p>
+                <p className="text-sm text-gray-600">{account.email}</p>
               </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Calendar className="h-5 w-5 text-gray-400" />
+              <div>
+                <p className="text-sm font-medium">تاريخ إنشاء الحساب</p>
+                <p className="text-sm text-gray-600">{formatDate(account.createdAt)}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Password Change */}
+      <div className="border rounded-lg p-4 shadow-sm">
+        <h2 className="text-xl font-semibold flex items-center mb-2">
+          <Lock className="h-5 w-5 ml-2" />
+          تغيير كلمة المرور
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">قم بتحديث كلمة المرور الخاصة بك</p>
+
+        <form onSubmit={handlePasswordChange} className="space-y-4">
+          {message.text && (
+            <div className={`p-3 rounded text-sm ${message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+              {message.text}
             </div>
           )}
-        </CardContent>
-      </Card>
 
-      {/* Change Password */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Lock className="h-5 w-5 ml-2" />
-            تغيير كلمة المرور
-          </CardTitle>
-          <CardDescription>قم بتحديث كلمة المرور الخاصة بك</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handlePasswordChange} className="space-y-4">
-            {message.text && (
-              <Alert variant={message.type === "error" ? "destructive" : "default"}>
-                <AlertDescription>{message.text}</AlertDescription>
-              </Alert>
-            )}
+          <div>
+            <label htmlFor="currentPassword" className="block mb-1 text-sm font-medium">كلمة المرور الحالية</label>
+            <input
+              id="currentPassword"
+              type="password"
+              value={passwordForm.currentPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+              required
+              disabled={updating}
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-            <div>
-              <Label htmlFor="currentPassword">كلمة المرور الحالية</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={passwordForm.currentPassword}
-                onChange={(e) =>
-                  setPasswordForm((prev) => ({
-                    ...prev,
-                    currentPassword: e.target.value,
-                  }))
-                }
-                required
-                disabled={updating}
-              />
-            </div>
+          <div>
+            <label htmlFor="newPassword" className="block mb-1 text-sm font-medium">كلمة المرور الجديدة</label>
+            <input
+              id="newPassword"
+              type="password"
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+              required
+              minLength={6}
+              disabled={updating}
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-sm text-gray-500 mt-1">يجب أن تكون كلمة المرور 6 أحرف على الأقل</p>
+          </div>
 
-            <div>
-              <Label htmlFor="newPassword">كلمة المرور الجديدة</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={passwordForm.newPassword}
-                onChange={(e) =>
-                  setPasswordForm((prev) => ({
-                    ...prev,
-                    newPassword: e.target.value,
-                  }))
-                }
-                required
-                minLength={6}
-                disabled={updating}
-              />
-              <p className="text-sm text-gray-500 mt-1">يجب أن تكون كلمة المرور 6 أحرف على الأقل</p>
-            </div>
+          <div>
+            <label htmlFor="confirmPassword" className="block mb-1 text-sm font-medium">تأكيد كلمة المرور الجديدة</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+              required
+              disabled={updating}
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-            <div>
-              <Label htmlFor="confirmPassword">تأكيد كلمة المرور الجديدة</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={passwordForm.confirmPassword}
-                onChange={(e) =>
-                  setPasswordForm((prev) => ({
-                    ...prev,
-                    confirmPassword: e.target.value,
-                  }))
-                }
-                required
-                disabled={updating}
-              />
-            </div>
-
-            <Button type="submit" disabled={updating}>
-              {updating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  جارٍ التحديث...
-                </>
-              ) : (
-                "تحديث كلمة المرور"
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          <button
+            type="submit"
+            disabled={updating}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm flex items-center disabled:opacity-50"
+          >
+            {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {updating ? "جارٍ التحديث..." : "تحديث كلمة المرور"}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

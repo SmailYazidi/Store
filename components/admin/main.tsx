@@ -4,15 +4,13 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import  AdminSidebar  from "./sidebar"
-import  AdminHeader  from "./header"
-import { Loader2 } from "lucide-react"
 import AdminDashboard from "./main/dashboard"
+import Loading from '@/components/Loading';
 interface AdminLayoutProps {
   children: React.ReactNode
 }
 
-export function AdminMain({ children }: AdminLayoutProps) {
+function AdminMain({ children }: AdminLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [loading, setLoading] = useState(true)
@@ -50,9 +48,7 @@ export function AdminMain({ children }: AdminLayoutProps) {
   // Show loading spinner while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+  <Loading />
     )
   }
 

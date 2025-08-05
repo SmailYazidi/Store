@@ -1,12 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { ShoppingCart, Package, FolderOpen, DollarSign, TrendingUp, Loader2 } from "lucide-react"
 import Link from "next/link"
-
+import Loading from '@/components/Loading';
 interface DashboardStats {
   totalOrders: number
   totalProducts: number
@@ -68,9 +65,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+     <Loading />
     )
   }
 
@@ -83,145 +78,89 @@ export default function AdminDashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي الطلبات</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalOrders || 0}</div>
-            <p className="text-xs text-muted-foreground">جميع الطلبات</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي المنتجات</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalProducts || 0}</div>
-            <p className="text-xs text-muted-foreground">منتج متاح</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">التصنيفات</CardTitle>
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalCategories || 0}</div>
-            <p className="text-xs text-muted-foreground">تصنيف نشط</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي الإيرادات</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalRevenue?.toFixed(2) || "0.00"} €</div>
-            <p className="text-xs text-muted-foreground">من الطلبات المكتملة</p>
-          </CardContent>
-        </Card>
+        {[
+          { label: "إجمالي الطلبات", icon: <ShoppingCart className="h-4 w-4 text-gray-500" />, value: stats?.totalOrders || 0, note: "جميع الطلبات" },
+          { label: "إجمالي المنتجات", icon: <Package className="h-4 w-4 text-gray-500" />, value: stats?.totalProducts || 0, note: "منتج متاح" },
+          { label: "التصنيفات", icon: <FolderOpen className="h-4 w-4 text-gray-500" />, value: stats?.totalCategories || 0, note: "تصنيف نشط" },
+          { label: "إجمالي الإيرادات", icon: <DollarSign className="h-4 w-4 text-gray-500" />, value: `${stats?.totalRevenue?.toFixed(2) || "0.00"} €`, note: "من الطلبات المكتملة" },
+        ].map((item, index) => (
+          <div key={index} className="border rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between pb-2">
+              <span className="text-sm font-medium">{item.label}</span>
+              {item.icon}
+            </div>
+            <div className="text-2xl font-bold">{item.value}</div>
+            <p className="text-xs text-gray-500">{item.note}</p>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Order Status Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>توزيع حالات الطلبات</CardTitle>
-            <CardDescription>عدد الطلبات حسب الحالة</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {Object.entries(stats?.ordersByStatus || {}).map(([status, count]) => (
-                <div key={status} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${statusColors[status] || "bg-gray-500"}`} />
-                    <span className="text-sm">{statusLabels[status] || status}</span>
-                  </div>
-                  <Badge variant="secondary">{count}</Badge>
+        <div className="border rounded-lg p-4 shadow-sm">
+          <h2 className="text-lg font-semibold mb-1">توزيع حالات الطلبات</h2>
+          <p className="text-sm text-gray-500 mb-4">عدد الطلبات حسب الحالة</p>
+          <div className="space-y-3">
+            {Object.entries(stats?.ordersByStatus || {}).map(([status, count]) => (
+              <div key={status} className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <div className={`w-3 h-3 rounded-full ${statusColors[status] || "bg-gray-500"}`} />
+                  <span className="text-sm">{statusLabels[status] || status}</span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Recent Orders */}
-        <Card>
-          <CardHeader>
-            <CardTitle>الطلبات الأخيرة</CardTitle>
-            <CardDescription>آخر 5 طلبات</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {stats?.recentOrders?.length ? (
-                stats.recentOrders.map((order) => (
-                  <div key={order._id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{order.orderCode}</div>
-                      <div className="text-xs text-gray-500">{order.customerName}</div>
-                      <div className="text-xs text-gray-400">{formatDate(order.createdAt)}</div>
+        <div className="border rounded-lg p-4 shadow-sm">
+          <h2 className="text-lg font-semibold mb-1">الطلبات الأخيرة</h2>
+          <p className="text-sm text-gray-500 mb-4">آخر 5 طلبات</p>
+          <div className="space-y-3">
+            {stats?.recentOrders?.length ? (
+              stats.recentOrders.map((order) => (
+                <div key={order._id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium text-sm">{order.orderCode}</div>
+                    <div className="text-xs text-gray-500">{order.customerName}</div>
+                    <div className="text-xs text-gray-400">{formatDate(order.createdAt)}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-white text-xs px-2 py-1 rounded ${statusColors[order.status] || "bg-gray-500"}`}>
+                      {statusLabels[order.status] || order.status}
                     </div>
-                    <div className="text-right">
-                      <Badge
-                        variant="secondary"
-                        className={`${statusColors[order.status] || "bg-gray-500"} text-white`}
-                      >
-                        {statusLabels[order.status] || order.status}
-                      </Badge>
-                      <div className="text-sm font-medium mt-1">
-                        {order.productPrice} {order.productCurrency}
-                      </div>
+                    <div className="text-sm font-medium mt-1">
+                      {order.productPrice} {order.productCurrency}
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-gray-500">لا توجد طلبات</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4 text-gray-500">لا توجد طلبات</div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>الإجراءات السريعة</CardTitle>
-          <CardDescription>الوصول السريع للوظائف الأساسية</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
-              <Link href="/admin/orders">
-                <ShoppingCart className="h-6 w-6 mb-2" />
-                إدارة الطلبات
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
-              <Link href="/admin/products">
-                <Package className="h-6 w-6 mb-2" />
-                إدارة المنتجات
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
-              <Link href="/admin/categories">
-                <FolderOpen className="h-6 w-6 mb-2" />
-                إدارة التصنيفات
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
-              <Link href="/admin/account">
-                <TrendingUp className="h-6 w-6 mb-2" />
-                إعدادات الحساب
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="border rounded-lg p-4 shadow-sm">
+        <h2 className="text-lg font-semibold mb-1">الإجراءات السريعة</h2>
+        <p className="text-sm text-gray-500 mb-4">الوصول السريع للوظائف الأساسية</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { href: "/admin/orders", icon: <ShoppingCart className="h-6 w-6 mb-2" />, label: "إدارة الطلبات" },
+            { href: "/admin/products", icon: <Package className="h-6 w-6 mb-2" />, label: "إدارة المنتجات" },
+            { href: "/admin/categories", icon: <FolderOpen className="h-6 w-6 mb-2" />, label: "إدارة التصنيفات" },
+            { href: "/admin/account", icon: <TrendingUp className="h-6 w-6 mb-2" />, label: "إعدادات الحساب" },
+          ].map((item, index) => (
+            <Link key={index} href={item.href} className="flex flex-col items-center justify-center border rounded-lg py-4 hover:bg-gray-100 text-sm font-medium">
+              {item.icon}
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

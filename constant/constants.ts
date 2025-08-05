@@ -11,7 +11,7 @@ export const sidebarAdminItems: SidebarItem[] = [
   {
     label: "Dashboard",
     icon: "dashboard",
-    route: "/admin/dashboard",
+    route: "/admin/",
     visible: true,
   },
   {

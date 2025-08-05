@@ -12,7 +12,7 @@ export default function Home() {
     <div className="relative min-h-screen flex flex-col">
 
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-40">
+        <div className="fixed inset-0 z-90">
           {isSidebarOpen && <ClientSidebar onClose={() => setIsSidebarOpen(false)} />}
 
    <div

@@ -11,7 +11,7 @@ interface ClientSidebarProps {
 
 const AdminSidebar = ({ onClose }: ClientSidebarProps) => {
   return (
-    <aside className="fixed top-0 left-0 h-full w-64 bg-white border-r border-black z-50">
+    <aside className="fixed  top-0 left-0 h-full w-64 bg-white border-r border-black z-50">
       {/* Logo section with close button */}
       <div className="flex items-center justify-between p-4 border-b border-black">
         <Logo />

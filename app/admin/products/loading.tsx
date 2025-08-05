@@ -1,3 +1,5 @@
-export default function Loading() {
-  return null
+import Loading from '@/components/Loading';
+
+export default function ProductLoadingPage() {
+  return <Loading />;
 }
