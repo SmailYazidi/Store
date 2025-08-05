@@ -1,30 +1,27 @@
 // /app/api/upload/route.ts
-import { put } from "@vercel/blob";
-import { NextResponse } from "next/server";
+import { put } from '@vercel/blob';
+import { NextResponse } from 'next/server';
 
-export async function POST(req: Request): Promise<NextResponse> {
-  const { searchParams } = new URL(req.url);
-  const filename = searchParams.get("filename");
+export async function POST(request: Request): Promise<NextResponse> {
+  const formData = await request.formData();
+  const file = formData.get('file') as File;
 
-  if (!filename) {
-    return NextResponse.json({ error: "Missing filename" }, { status: 400 });
+  if (!file) {
+    return NextResponse.json({ error: 'No file uploaded.' }, { status: 400 });
   }
+
+  const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
 
   try {
-    const blob = await put(filename, req.body!, {
-      access: "public",
+    const blob = await put(filename, file, {
+      access: 'public',
+      addRandomSuffix: false,
     });
 
-    const cleanFilename = blob.pathname.split("/").pop();
-
-    return NextResponse.json({ filename: cleanFilename });
+    // Optional: return only filename
+    return NextResponse.json({ filename });
   } catch (error) {
-    console.error("Upload error:", error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    console.error('Upload error:', error);
+    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
-}
-
-// Optional: reject unsupported methods
-export function GET() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

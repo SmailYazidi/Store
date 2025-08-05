@@ -40,41 +40,41 @@ export default function AddProductPage() {
     }));
   };
 
-  const handleFileChange = async (e) => {
-    const files = Array.from(e.target.files);
-    setUploading(true);
+const handleFileChange = async (e) => {
+  const files = Array.from(e.target.files);
+  setUploading(true);
 
-    const uploadedFilenames = await Promise.all(
-      files.map(async (file) => {
-        const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-            const res = await fetch(`/api/upload?filename=${filename}`, {
-            method: "POST",
-            body: file,
-            });
+  const uploadedFilenames = await Promise.all(
+    files.map(async (file) => {
+      const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+      const formData = new FormData();
+      formData.append("file", file, filename);
 
-            if (!res.ok) {
-            console.error("Upload failed", await res.text());
-            return null;
-            }
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-            const data = await res.json();
+      if (!res.ok) {
+        console.error("Upload failed", await res.text());
+        return null;
+      }
 
-       
+      const data = await res.json();
+      return data?.filename || null;
+    })
+  );
 
-        return data?.url ? data.url.split("/").pop() : null;
-      })
-    );
+  const validFilenames = uploadedFilenames.filter(Boolean);
 
-    const validFilenames = uploadedFilenames.filter(Boolean);
+  setFormData((prev) => ({
+    ...prev,
+    mainImage: validFilenames[0] || prev.mainImage,
+    images: [...prev.images, ...validFilenames],
+  }));
 
-    setFormData((prev) => ({
-      ...prev,
-      mainImage: validFilenames[0] || prev.mainImage,
-      images: [...prev.images, ...validFilenames],
-    }));
-
-    setUploading(false);
-  };
+  setUploading(false);
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
