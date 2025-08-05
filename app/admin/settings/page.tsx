@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { Loader2, User, Mail, Calendar, Lock } from "lucide-react"
 import Loading from '@/components/Loading';
+import AdminSidebar from "@/components/admin/sidebar"
+import AdminHeader from "@/components/admin/header"
 interface AdminAccount {
   id: string
   username: string
@@ -12,6 +14,7 @@ interface AdminAccount {
 
 export default function AccountPage() {
   const [account, setAccount] = useState<AdminAccount | null>(null)
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -101,7 +104,27 @@ export default function AccountPage() {
     )
   }
 
-  return (
+  return (   <div className="relative min-h-screen flex flex-col">
+
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-90">
+          {isSidebarOpen && <AdminSidebar onClose={() => setIsSidebarOpen(false)} />}
+
+   <div
+            className="fixed inset-0 bg-black opacity-50"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        </div>
+      )}
+
+
+      <div className="flex-1 flex flex-col">
+        <AdminHeader onMenuClick={() => setIsSidebarOpen(prev => !prev)} />
+
+
+
+          <main className="p-4 pt-25 bg-white text-black min-h-screen">
+<div className="mb-10 max-w-7xl mx-auto">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">إعدادات الحساب</h1>
@@ -207,6 +230,9 @@ export default function AccountPage() {
             {updating ? "جارٍ التحديث..." : "تحديث كلمة المرور"}
           </button>
         </form>
+      </div>
+    </div></div>
+    </main>
       </div>
     </div>
   )

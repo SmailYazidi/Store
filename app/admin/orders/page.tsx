@@ -5,7 +5,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Eye, Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import Loading from '@/components/Loading';
-
+import AdminSidebar from "@/components/admin/sidebar"
+import AdminHeader from "@/components/admin/header"
 type Order = {
   _id: string;
   orderCode: string;
@@ -57,7 +58,7 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
-
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const fetchOrders = async (page = 1) => {
     try {
       setLoading(true);
@@ -143,9 +144,28 @@ export default function OrdersPage() {
   if (error) {
     return <div className="text-red-500 p-4">{error}</div>;
   }
+return( 
+   <div className="relative min-h-screen flex flex-col">
 
-  return (
-    <div className="container mx-auto px-4 py-8">
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-90">
+          {isSidebarOpen && <AdminSidebar onClose={() => setIsSidebarOpen(false)} />}
+
+   <div
+            className="fixed inset-0 bg-black opacity-50"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        </div>
+      )}
+
+
+      <div className="flex-1 flex flex-col">
+        <AdminHeader onMenuClick={() => setIsSidebarOpen(prev => !prev)} />
+
+
+
+          <main className="p-4 pt-25 bg-white text-black min-h-screen">
+<div className="mb-10 max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Order Management</h1>
 
       {/* Search and Filters */}
@@ -378,6 +398,9 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+</div>
+    </main>
+      </div>
     </div>
-  );
+)
 }

@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Edit, Trash2, Plus } from "lucide-react";
 import Loading from '@/components/Loading';
+import AdminSidebar from "@/components/admin/sidebar"
+import AdminHeader from "@/components/admin/header"
 type Category = {
   _id: string;
   name: {
@@ -19,6 +21,7 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const fetchCategories = async () => {
     try {
@@ -78,6 +81,27 @@ export default function CategoriesPage() {
   }
 
   return (
+       <div className="relative min-h-screen flex flex-col">
+
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-90">
+          {isSidebarOpen && <AdminSidebar onClose={() => setIsSidebarOpen(false)} />}
+
+   <div
+            className="fixed inset-0 bg-black opacity-50"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        </div>
+      )}
+
+
+      <div className="flex-1 flex flex-col">
+        <AdminHeader onMenuClick={() => setIsSidebarOpen(prev => !prev)} />
+
+
+
+          <main className="p-4 pt-25 bg-white text-black min-h-screen">
+<div className="mb-10 max-w-7xl mx-auto">
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Categories</h1>
@@ -152,6 +176,9 @@ export default function CategoriesPage() {
             ))}
           </tbody>
         </table>
+      </div>
+    </div></div>
+    </main>
       </div>
     </div>
   );

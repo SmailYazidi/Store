@@ -16,13 +16,12 @@ export default function Admin() {
 
 
   useEffect(() => {
-    // Skip auth check for login page
+ 
     if (pathname === "/admin/login") {
       setLoading(false)
       return
     }
 
-    // Check authentication
     const checkAuth = async () => {
       try {
         const response = await fetch("/api/admin/account")

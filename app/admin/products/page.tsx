@@ -6,7 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Edit, Trash2, Eye } from "lucide-react";
 import Loading from '@/components/Loading';
-
+import AdminSidebar from "@/components/admin/sidebar"
+import AdminHeader from "@/components/admin/header"
 type Product = {
   _id: string;
   name: {
@@ -38,6 +39,7 @@ type Pagination = {
 };
 
 export default function ProductsPage() {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [products, setProducts] = useState<Product[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -106,7 +108,27 @@ export default function ProductsPage() {
     return <div className="text-red-500 p-4">{error}</div>;
   }
 
-  return (
+  return ( <div className="relative min-h-screen flex flex-col">
+
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-90">
+          {isSidebarOpen && <AdminSidebar onClose={() => setIsSidebarOpen(false)} />}
+
+   <div
+            className="fixed inset-0 bg-black opacity-50"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        </div>
+      )}
+
+
+      <div className="flex-1 flex flex-col">
+        <AdminHeader onMenuClick={() => setIsSidebarOpen(prev => !prev)} />
+
+
+
+          <main className="p-4 pt-25 bg-white text-black min-h-screen">
+<div className="mb-10 max-w-7xl mx-auto">
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Products</h1>
@@ -290,6 +312,9 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
+      </div>
+    </div></div>
+    </main>
       </div>
     </div>
   );
