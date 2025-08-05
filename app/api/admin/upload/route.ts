@@ -1,4 +1,4 @@
-// /app/api/upload/route.ts
+// /app/api/admin/upload/route.ts
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 
@@ -18,10 +18,11 @@ export async function POST(request: Request): Promise<NextResponse> {
       addRandomSuffix: false,
     });
 
-    // Optional: return only filename
-    return NextResponse.json({ filename });
+    return NextResponse.json({ filename: blob.pathname.split('/').pop() });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }
+
+export const dynamic = 'force-dynamic';
