@@ -7,20 +7,23 @@ import { Eye, Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
 
 type Order = {
   _id: string;
-  orderNumber: string;
+  orderCode: string;
   customerName: string;
   customerEmail: string;
-  status: string;
-  totalAmount: number;
+  customerPhone: string;
+  customerAddress: string;
+  productId: string;
+  productName: string;
+  productPrice: number;
+  productImage: string;
   currency: string;
+  status: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  verificationCode: string;
+  isVerified: boolean;
   createdAt: string;
-  items: {
-    productId: string;
-    productName: string;
-    productImage: string;
-    quantity: number;
-    price: number;
-  }[];
+  updatedAt: string;
 };
 
 type Pagination = {
@@ -33,6 +36,7 @@ type Pagination = {
 const statusOptions = [
   "all",
   "pending",
+  "verified",
   "processing",
   "shipped",
   "delivered",
@@ -101,13 +105,28 @@ export default function OrdersPage() {
     switch (status.toLowerCase()) {
       case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case "processing":
+      case "verified":
         return "bg-blue-100 text-blue-800";
+      case "processing":
+        return "bg-indigo-100 text-indigo-800";
       case "shipped":
         return "bg-purple-100 text-purple-800";
       case "delivered":
         return "bg-green-100 text-green-800";
       case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getPaymentStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "paid":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "failed":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -192,16 +211,19 @@ export default function OrdersPage() {
                 Customer
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Product
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Items
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total
+                Amount
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Payment
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -213,7 +235,7 @@ export default function OrdersPage() {
               <tr key={order._id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    #{order.orderNumber}
+                    {order.orderCode}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -224,16 +246,30 @@ export default function OrdersPage() {
                     {order.customerEmail}
                   </div>
                 </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 h-10 w-10">
+                      <img
+                        className="h-10 w-10 rounded"
+                        src={`https://your-blob-storage-url/${order.productImage}`}
+                        alt={order.productName}
+                      />
+                    </div>
+                    <div className="ml-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {order.productName}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {order.productPrice} {order.currency}
+                      </div>
+                    </div>
+                  </div>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(order.createdAt)}
                 </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900">
-                    {order.items.reduce((sum, item) => sum + item.quantity, 0)} items
-                  </div>
-                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  {order.totalAmount.toFixed(2)} {order.currency}
+                  {order.productPrice} {order.currency}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
@@ -242,6 +278,17 @@ export default function OrdersPage() {
                     )}`}
                   >
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusColor(
+                      order.paymentStatus
+                    )}`}
+                  >
+                    {order.paymentMethod === "cash_on_delivery" 
+                      ? "Cash on Delivery" 
+                      : order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

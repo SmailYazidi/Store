@@ -3,18 +3,8 @@ import { connectDB } from "@/lib/mongodb";
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionId = request.cookies.get("sessionId")?.value;
-
-    if (!sessionId) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
-    }
 
     const db = await connectDB();
-
-    const session = await db.collection("sessions").findOne({ _id: sessionId });
-    if (!session) {
-      return NextResponse.json({ error: "جلسة غير صالحة" }, { status: 401 });
-    }
 
     const [totalOrders, totalProducts, totalCategories, ordersByStatus, recentOrders] = await Promise.all([
       db.collection("orders").countDocuments(),
