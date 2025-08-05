@@ -11,19 +11,18 @@ interface ClientHeaderProps {
 
 const ClientHeader = ({ onMenuClick }: ClientHeaderProps) => {
   return (
-    <header className="flex items-center justify-between px-4 py-4 bg-white text-black border-b border-black">
+    <header className="flex items-center justify-between px-4 py-4 bg-white text-black border-b border-black w-full">
       {/* Left section */}
-      <div className="flex items-center gap-4">
+      <div className="w-1/4 flex items-center gap-4">
         <LeftMenu onMenuClick={onMenuClick} />
         <Logo />
       </div>
 
       {/* Right section */}
-
-             <SearchBar />
+      <div className="w-3/4 flex items-center justify-end gap-4">
+        <SearchBar />
         <LanguageDropdown />
-   
-
+      </div>
     </header>
   )
 }

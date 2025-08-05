@@ -1,103 +1,87 @@
-'use client'
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-
-interface OrderInfo {
-  orderCode: string
-  customerName: string
-  customerEmail: string
-  customerPhone: string
-  productName: string
-  productPrice: number
-  productCurrency: string
-  quantity: number
-  status: string
-}
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 export default function TrackOrderPage() {
-  const router = useRouter()
-  const [orderCode, setOrderCode] = useState("")
-  const [orderInfo, setOrderInfo] = useState<OrderInfo | null>(null)
-  const [error, setError] = useState("")
+  const [orderCode, setOrderCode] = useState("");
+  const [order, setOrder] = useState<any>(null);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setOrderInfo(null)
+  const handleTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setOrder(null);
 
-    if (!orderCode.trim()) {
-      setError("Please enter your order code.")
-      return
+    if (!orderCode) {
+      setError("Please enter your order code");
+      return;
     }
 
     try {
-      const res = await fetch(`/api/client/track-order?orderCode=${encodeURIComponent(orderCode)}`)
+      const res = await fetch("/api/client/orders/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderCode }),
+      });
+
       if (!res.ok) {
-        throw new Error("Order not found.")
+        const data = await res.json();
+        throw new Error(data.message || "Order not found");
       }
-      const data: OrderInfo = await res.json()
-      setOrderInfo(data)
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError("Failed to fetch order.")
-      }
+
+      const data = await res.json();
+      setOrder(data);
+    } catch (err: any) {
+      setError(err.message || "Error fetching order");
     }
-  }
+  };
 
   return (
-    <div style={{ margin: "auto", padding: 16, color: "#000", backgroundColor: "#fff", minHeight: "100vh" }}>
-      <button 
-        onClick={() => router.back()} 
-        style={{ marginBottom: 16, cursor: "pointer", fontSize: 18, border: "none", background: "none", color: "#000" }}
-        aria-label="Go back"
-      >
-        ← رجوع
-      </button>
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col items-center p-6 w-full">
+      {/* Arrow Left */}
+      <div className="w-full max-w-md mb-4 flex items-center">
+        <button
+          onClick={() => router.back()}
+          className="text-gray-800 hover:text-gray-600 flex items-center"
+        >
+          <ArrowLeft className="mr-2" />
+          Back
+        </button>
+      </div>
 
-      <h1 style={{ marginBottom: 16, textAlign: "center" }}>تتبع طلبك</h1>
+      <h1 className="text-3xl font-bold mb-6">Track Your Order</h1>
 
-      <form onSubmit={handleSubmit} style={{ marginBottom: 16 }}>
-        <label htmlFor="orderCode" style={{ display: "block", marginBottom: 8 }}>
-          أدخل كود الطلب:
-        </label>
+      <form onSubmit={handleTrack} className="w-full max-w-md flex flex-col gap-4 mb-6">
         <input
-          id="orderCode"
           type="text"
           value={orderCode}
           onChange={(e) => setOrderCode(e.target.value)}
-          style={{ width: "100%", padding: 8, boxSizing: "border-box", marginBottom: 8, border: "1px solid #000", color: "#000" }}
-          placeholder="مثلاً: FA6W5YTWEGWE767W6EW"
+          placeholder="Enter Order Code (e.g. #ORD-7775)"
+          className="border border-gray-700 rounded-md p-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-700"
         />
         <button
           type="submit"
-          style={{ width: "100%", padding: 8, cursor: "pointer", border: "1px solid #000", backgroundColor: "#fff", color: "#000" }}
+          className="bg-gray-900 text-white py-3 rounded-md font-semibold hover:bg-gray-800 transition"
         >
-          تحقق
+          Track Order
         </button>
       </form>
 
-      {error && (
-        <p style={{ color: "red", marginBottom: 16 }} role="alert" aria-live="assertive">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-red-600 font-medium">{error}</p>}
 
-      {orderInfo && (
-        <div aria-live="polite">
-          <h2 style={{ marginBottom: 8 }}>تفاصيل الطلب</h2>
-          <p><strong>كود الطلب:</strong> {orderInfo.orderCode}</p>
-          <p><strong>اسم العميل:</strong> {orderInfo.customerName}</p>
-          <p><strong>البريد الإلكتروني:</strong> {orderInfo.customerEmail}</p>
-          <p><strong>الهاتف:</strong> {orderInfo.customerPhone}</p>
-          <p><strong>المنتج:</strong> {orderInfo.productName}</p>
-          <p><strong>السعر:</strong> {orderInfo.productPrice} {orderInfo.productCurrency}</p>
-          <p><strong>الكمية:</strong> {orderInfo.quantity}</p>
-          <p><strong>حالة الطلب:</strong> {orderInfo.status}</p>
+      {order && (
+        <div className="w-full max-w-md bg-gray-100 p-6 rounded-md shadow-md text-gray-900">
+          <h2 className="text-2xl font-semibold mb-4">Order Details:</h2>
+          <p><strong>Order Code:</strong> {order.orderCode}</p>
+          <p><strong>Customer Name:</strong> {order.customerName}</p>
+          <p><strong>Status:</strong> {order.status}</p>
+          <p><strong>Payment Method:</strong> {order.paymentMethod || "Not specified"}</p>
+          <p><strong>Payment Status:</strong> {order.paymentStatus}</p>
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,44 +1,80 @@
-import { NextResponse } from "next/server"
-import { connectDB } from "@/lib/mongodb"
+import { NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
+import { connectDB } from '@/lib/mongodb';
 
-interface VerifyCodeRequestBody {
-  orderCode: string
-  verificationCode: string
-}
-
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const { orderCode, verificationCode }: VerifyCodeRequestBody = await req.json()
+    const { order_id, code } = await request.json();
 
-    if (!orderCode || !verificationCode) {
-      return NextResponse.json({ message: "Missing orderCode or verificationCode" }, { status: 400 })
+    if (!order_id || !code) {
+      return NextResponse.json(
+        { success: false, message: 'يجب إدخال رمز الطلب ورمز التحقق' },
+        { status: 400 }
+      );
     }
 
-    const db = await connectDB()
+    if (code.length !== 6) {
+      return NextResponse.json(
+        { success: false, message: 'رمز التحقق يجب أن يكون 6 أرقام' },
+        { status: 400 }
+      );
+    }
 
-    const order = await db.collection("orders").findOne({ orderCode })
+    const db = await connectDB();
+
+    // Try to find the order using order_id and verificationCode
+    const order = await db.collection('orders').findOne({
+      _id: new ObjectId(order_id),
+      verificationCode: code,
+    });
 
     if (!order) {
-      return NextResponse.json({ message: "Order not found" }, { status: 404 })
+      return NextResponse.json(
+        { success: false, message: 'رمز التحقق غير صحيح أو الطلب غير موجود' },
+        { status: 404 }
+      );
     }
 
-    // تحقق من رمز التحقق (مثلاً إذا هو نفسه orderCode)
-    if (verificationCode !== orderCode) {
-      return NextResponse.json({ message: "Verification code is incorrect" }, { status: 400 })
+    if (order.isVerified) {
+      return NextResponse.json(
+        { success: false, message: 'تم التحقق من هذا الطلب مسبقًا' },
+        { status: 400 }
+      );
     }
 
-    await db.collection("orders").updateOne(
-      { orderCode },
-      { $set: { emailVerified: true, status: "payment_pending", updatedAt: new Date() } }
-    )
+    // Update order as verified
+    const result = await db.collection('orders').updateOne(
+      { _id: new ObjectId(order_id) },
+      {
+        $set: {
+          isVerified: true,
+          status: 'verified',
+          updatedAt: new Date(),
+        },
+      }
+    );
 
-    return NextResponse.json({ message: "Email verified successfully" }, { status: 200 })
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error("Verify code error:", error.message)
-    } else {
-      console.error("Verify code error:", error)
+    if (result.modifiedCount === 0) {
+      throw new Error('فشل في تحديث حالة الطلب');
     }
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'تم التحقق بنجاح',
+        orderId: order._id.toString(),
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error('Verification error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'حدث خطأ أثناء التحقق',
+        error: error.message,
+      },
+      { status: 500 }
+    );
   }
 }

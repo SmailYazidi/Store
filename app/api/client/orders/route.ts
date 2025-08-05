@@ -1,91 +1,104 @@
-import { NextResponse } from "next/server"
-import { ObjectId } from "mongodb"
-import { connectDB } from "@/lib/mongodb"
+// app/api/client/orders/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { ObjectId } from "mongodb";
+import { connectDB } from "@/lib/mongodb";
 
-function generateOrderCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-  let result = ""
-  for (let i = 0; i < 12; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
+enum OrderStatus {
+  PENDING = "pending",
+  VERIFIED = "verified",
+  PAID = "paid",
+  SHIPPED = "shipped",
+  DELIVERED = "delivered",
+}
+
+type PaymentMethod = "card" | "cash_on_delivery";
+
+const generateVerificationCode = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
+
+const generateOrderCode = () =>
+  `#ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const { productId, name, email, phone, address } = body;
+
+  if (!productId || !name || !email || !phone || !address) {
+    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
-  return result
+
+  if (!ObjectId.isValid(productId)) {
+    return NextResponse.json({ error: "Invalid product ID" }, { status: 400 });
+  }
+
+  try {
+    const db = await connectDB();
+    const productObjectId = new ObjectId(productId);
+
+    const product = await db.collection("products").findOne({
+      _id: productObjectId,
+      quantity: { $gt: 0 },
+    });
+
+    if (!product) {
+      return NextResponse.json({ error: "Product not available" }, { status: 400 });
+    }
+
+    const verificationCode = generateVerificationCode();
+    const orderCode = generateOrderCode();
+
+    const order = {
+      orderCode,
+      customerName: name,
+      customerEmail: email,
+      customerPhone: phone,
+      customerAddress: address,
+      productId: productObjectId,
+      productName: product.name,
+      productPrice: product.price,
+      productImage: product.mainImage || null,
+      currency: product.currency,
+      status: OrderStatus.PENDING,
+      paymentMethod: null as PaymentMethod | null,
+      paymentStatus: "pending",
+      verificationCode,
+      isVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await db.collection("orders").insertOne(order);
+
+    await db.collection("products").updateOne(
+      { _id: productObjectId },
+      { $inc: { quantity: -1 } }
+    );
+
+    return NextResponse.json(
+      {
+        message: "Order created successfully",
+        order: { ...order, _id: result.insertedId },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Order creation failed:", error);
+    return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+  }
 }
 
 export async function GET() {
   try {
-    const db = await connectDB()
-
+    const db = await connectDB();
     const orders = await db
       .collection("orders")
       .find({})
       .sort({ createdAt: -1 })
-      .toArray()
+      .toArray();
 
-    return NextResponse.json(orders)
+    return NextResponse.json(orders);
   } catch (error) {
-    console.error("Error fetching orders:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch orders" },
-      { status: 500 }
-    )
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const db = await connectDB()
-    const body = await request.json()
-
-    // Validate productId
-    if (!ObjectId.isValid(body.productId)) {
-      return NextResponse.json(
-        { error: "Invalid product ID format" },
-        { status: 400 }
-      )
-    }
-
-    // Get product details
-    const product = await db
-      .collection("products")
-      .findOne({ _id: new ObjectId(body.productId) })
-
-    if (!product) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      )
-    }
-
-    const orderCode = generateOrderCode()
-
-    const order = {
-      orderCode,
-      customerName: body.name,
-      customerPhone: body.phone,
-      customerEmail: body.email,
-      customerAddress: body.address,
-      productId: new ObjectId(body.productId), // Store as ObjectId
-      productName: product.name || body.productName,
-      productPrice: product.price,
-      productImage: product.mainImage,
-      status: "processing",
-      paymentStatus: "pending",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-
-    const result = await db.collection("orders").insertOne(order)
-
-    return NextResponse.json({
-      message: "Order created successfully",
-      orderId: result.insertedId,
-      orderCode,
-    })
-  } catch (error) {
-    console.error("Error creating order:", error)
-    return NextResponse.json(
-      { error: "Failed to create order" },
-      { status: 500 }
-    )
+    console.error("Error fetching orders:", error);
+    return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
   }
 }

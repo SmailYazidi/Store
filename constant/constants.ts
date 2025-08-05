@@ -49,7 +49,7 @@ export const clientSidebarItems: SidebarItem[] = [
   },
 
   {
-    label: "My Orders",
+    label: "Track Order",
     icon: "package",
     route: "/client/track-order",
     visible: true,
@@ -57,7 +57,7 @@ export const clientSidebarItems: SidebarItem[] = [
   {
     label: "Contact",
     icon: "phone",
-    route: "/contact",
+    route: "client/contact",
     visible: true,
   },
 ]

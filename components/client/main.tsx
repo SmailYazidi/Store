@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import CategorySection from "./main/CategorySection"
 import { Category, Product } from "@/lib/models"
 import { toast } from "sonner"
+import Loading from '@/components/Loading';
 
 const ClientMain = () => {
   const [categories, setCategories] = useState<Category[]>([])
@@ -43,9 +44,7 @@ const ClientMain = () => {
 
   if (loading) {
     return (
-      <main className="p-4 bg-white text-black min-h-screen text-center">
-        <p>جارٍ تحميل المنتجات...</p>
-      </main>
+  <Loading />
     )
   }
 

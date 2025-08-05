@@ -24,15 +24,15 @@ const validateObjectId = (id: string): boolean => {
 
 const validateCategoryInput = (body: any): { valid: boolean; errors?: string[] } => {
   const errors: string[] = []
-  
+
   if (!body?.name?.ar) {
     errors.push("Arabic name (name.ar) is required")
   }
-  
+
   if (body.slug && typeof body.slug !== 'string') {
     errors.push("Slug must be a string")
   }
-  
+
   return {
     valid: errors.length === 0,
     errors: errors.length > 0 ? errors : undefined
@@ -47,75 +47,26 @@ const generateSlug = (name: string): string => {
     .trim()
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET() {
   try {
-    // Validate ID format
-    if (!validateObjectId(params.id)) {
-      return NextResponse.json(
-        { 
-          success: false,
-          error: "Invalid category ID format",
-          code: "INVALID_ID_FORMAT"
-        },
-        { status: 400 }
-      )
-    }
-
     const db = await connectDB()
-    const category = await db.collection<Category>("categories").findOne(
-      { _id: new ObjectId(params.id) },
-      { 
-        projection: {
-          "name.ar": 1,
-          "name.fr": 1,
-          "name.en": 1,
-          slug: 1,
-          imageUrl: 1,
-          isActive: 1,
-          createdAt: 1,
-          updatedAt: 1
-        }
-      }
-    )
+    const categories = await db.collection<Category>("categories").find().toArray()
 
-    if (!category) {
-      return NextResponse.json(
-        { 
-          success: false,
-          error: "Category not found",
-          code: "CATEGORY_NOT_FOUND"
-        },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(
-      { 
-        success: true,
-        data: {
-          ...category,
-          _id: category._id.toString(),
-          createdAt: category.createdAt.toISOString(),
-          updatedAt: category.updatedAt.toISOString()
-        } 
-      }
-    )
-
+    return NextResponse.json(categories)
   } catch (error) {
-    console.error("Category fetch error:", error)
+    console.error("Category list fetch error:", error)
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: "Failed to fetch category details",
-        code: "CATEGORY_FETCH_ERROR"
+        error: "Failed to fetch categories",
+        code: "CATEGORY_LIST_ERROR"
       },
       { status: 500 }
     )
   }
 }
+
+
 
 export async function POST(request: Request) {
   try {
@@ -162,7 +113,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Category creation error:", error)
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: "Failed to create category",
         code: "CATEGORY_CREATION_ERROR"

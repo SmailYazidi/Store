@@ -1,12 +1,12 @@
+
 "use client";
 
 import type React from "react";
-import { AdminLayout } from "@/components/admin/admin-layout";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { AdminLayout } from "@/components/admin/admin-layout";
 
-// This is the component that handles admin authentication
 function AdminGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -15,27 +15,34 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    if (pathname === "/admin/login") {
-      setAuthenticated(true);
-      setLoading(false);
-      return;
-    }
+    const checkAuth = async () => {
+      // Allow login page without checks
+      if (pathname === "/admin/login") {
+        setAuthenticated(true);
+        setLoading(false);
+        return;
+      }
 
-    const cookies = document.cookie.split("; ").reduce<Record<string, string>>((acc, current) => {
-      const [key, value] = current.split("=");
-      acc[key] = value;
-      return acc;
-    }, {});
+      try {
+        const res = await fetch("/api/admin/account", {
+          method: "GET",
+          credentials: "include", // Important: sends cookies
+        });
 
-    const sessionId = cookies.sessionId;
+        if (res.ok) {
+          setAuthenticated(true);
+        } else {
+          router.replace("/admin/login");
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        router.replace("/admin/login");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (!sessionId) {
-      router.replace("/admin/login");
-      return;
-    }
-
-    setAuthenticated(true);
-    setLoading(false);
+    checkAuth();
   }, [pathname, router]);
 
   if (loading) {
@@ -57,7 +64,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   return null;
 }
 
-// This is the default export that Next.js expects for layout files
 export default function AdminLayoutWrapper({ children }: { children: React.ReactNode }) {
   return <AdminGuard>{children}</AdminGuard>;
 }
+

@@ -18,7 +18,7 @@ const CategorySection = ({
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl font-bold">{category.name.fr}</h2>
         <Link
-          href={`/client/category/${category._id}`}
+             href={`/client/categories/products/${category._id}`}
           className="text-blue-600 hover:underline flex items-center gap-1"
         >
           Voir tout <ArrowRight size={18} />
@@ -54,7 +54,7 @@ const CategorySection = ({
     
           <div className="flex items-center justify-center">
             <Link
-              href={`/client/category/${category._id}`}
+              href={`/client/categories/products/${category._id}`}
               className="flex items-center justify-center w-10 h-32 rounded bg-gray-100 hover:bg-gray-200"
             >
               <ArrowRight />

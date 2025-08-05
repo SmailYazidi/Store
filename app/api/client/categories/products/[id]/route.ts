@@ -3,12 +3,12 @@ import { ObjectId } from "mongodb";
 import { connectDB } from "@/lib/mongodb";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const db = await connectDB();
-    const categoryId = params.id;
+    const categoryId = params.id; // No need to await here in API routes
 
     if (!ObjectId.isValid(categoryId)) {
       return NextResponse.json(
@@ -17,23 +17,20 @@ export async function GET(
       );
     }
 
-    const category = await db
-      .collection("categories")
-      .findOne({ _id: new ObjectId(categoryId) });
+    const products = await db
+      .collection("products")
+      .find({ 
+        categoryId: new ObjectId(categoryId), 
+        isVisible: true 
+      })
+      .toArray();
 
-    if (!category) {
-      return NextResponse.json(
-        { error: "التصنيف غير موجود" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: category }, { status: 200 });
+    return NextResponse.json(products, { status: 200 });
   } catch (error) {
+    console.error("Error fetching products:", error);
     return NextResponse.json(
-      { error: "فشل في جلب بيانات التصنيف" },
+      { error: "فشل في جلب المنتجات" },
       { status: 500 }
     );
   }
 }
-

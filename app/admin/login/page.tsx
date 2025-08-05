@@ -1,10 +1,10 @@
+
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLoginPage() {
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
@@ -16,11 +16,12 @@ export default function AdminLoginPage() {
     const res = await fetch('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ password }),
     });
 
     if (res.ok) {
-      router.push('/admin'); // تحويل إلى لوحة التحكم الرئيسية بعد تسجيل الدخول
+      console.log("login sucses")
+      router.push('/admin');
     } else {
       const text = await res.text();
       setError(text || 'Login failed');
@@ -31,16 +32,6 @@ export default function AdminLoginPage() {
     <div style={{ maxWidth: 400, margin: 'auto', padding: 20 }}>
       <h1>تسجيل دخول المسؤول</h1>
       <form onSubmit={handleSubmit}>
-        <label>
-          اسم المستخدم:
-          <input
-            type="text"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            required
-          />
-        </label>
-        <br />
         <label>
           كلمة المرور:
           <input
@@ -57,3 +48,4 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+

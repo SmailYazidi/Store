@@ -12,10 +12,13 @@ async function getAdminIdFromSession(request: NextRequest) {
   const db = await connectDB();
   const session = await db.collection('admin_sessions').findOne({ _id: sessionId });
   if (!session) return null;
+
+  // Check if session is expired
   if (new Date() > new Date(session.expiresAt)) {
     await db.collection('admin_sessions').deleteOne({ _id: sessionId });
     return null;
   }
+
   return session.adminId;
 }
 
@@ -27,7 +30,6 @@ export async function PUT(request: NextRequest) {
     }
 
     const { currentPassword, newPassword } = await request.json();
-
     if (!currentPassword || !newPassword) {
       return new NextResponse('Missing passwords', { status: 400 });
     }
@@ -44,18 +46,34 @@ export async function PUT(request: NextRequest) {
       return new NextResponse('Current password incorrect', { status: 403 });
     }
 
-    // تشفير كلمة المرور الجديدة
-    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    const newPasswordHash = await bcrypt.hash(newPassword, 12);
 
     await db.collection('admin_passwords').updateOne(
       { _id: adminId },
-      { $set: { passwordHash: newPasswordHash } }
+      {
+        $set: {
+          passwordHash: newPasswordHash,
+          updatedAt: new Date(),
+        },
+      }
     );
 
     return new NextResponse('Password updated successfully', { status: 200 });
 
   } catch (error) {
     console.error('Change password error:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
+  }
+} export async function GET(request: NextRequest) {
+  try {
+    const adminId = await getAdminIdFromSession(request);
+    if (!adminId) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
+    return NextResponse.json({ adminId });
+  } catch (err) {
+    console.error('GET /admin/account error:', err);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
