@@ -90,7 +90,7 @@ export default function ProductPage() {
         <div>
           <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 mb-4">
             <Image
-              src={`/images/${mainImage}`}
+             src={`${process.env.NEXT_PUBLIC_BLOB_BASE_URL}${product.mainImage}`}
               alt={product.name.en || product.name.fr || "Product image"}
               fill
               className="object-cover"
@@ -120,7 +120,7 @@ export default function ProductPage() {
                   onClick={() => setMainImage(image)}
                 >
                   <Image
-                    src={`/images/${image}`}
+                    src={`${process.env.NEXT_PUBLIC_BLOB_BASE_URL}${image}`}
                     alt={`Thumbnail ${index + 1}`}
                     fill
                     className="object-cover"

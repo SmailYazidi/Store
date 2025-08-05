@@ -71,7 +71,7 @@ export default async function ProductsPage({
                 <div className="bg-white rounded shadow p-3 text-center">
                   <div className="w-full h-32 relative mb-2">
                     <Image
-                      src={product.mainImage} // Use directly if it’s a full URL
+                       src={`${process.env.NEXT_PUBLIC_BLOB_BASE_URL}${product.mainImage}`} 
                       alt={product.name.fr}
                       fill
                       className="object-cover rounded"
