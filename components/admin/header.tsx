@@ -1,53 +1,32 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Menu, User, LogOut } from "lucide-react"
+import SearchBar from "./header/Search"
+import LanguageDropdown from "./header/LanguageDropdown"
+import Logo from "./header/Logo"
+import LeftMenu from "./header/LeftMenu"
 
-interface AdminHeaderProps {
+interface ClientHeaderProps {
   onMenuClick: () => void
 }
 
-export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
-  const router = useRouter()
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/admin/login", { method: "DELETE" })
-      router.push("/admin/login")
-      router.refresh()
-    } catch (error) {
-      console.error("Logout error:", error)
-    }
-  }
-
+const AdminHeader = ({ onMenuClick }: ClientHeaderProps) => {
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-      <Button variant="ghost" size="sm" className="lg:hidden" onClick={onMenuClick}>
-        <Menu className="h-5 w-5" />
-      </Button>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white text-black w-full py-4 ">
+      <div className="flex items-center justify-between max-w-7xl mx-auto px-4">
+        {/* Left section */}
+        <div className="w-1/4 flex items-center gap-4">
+          <LeftMenu onMenuClick={onMenuClick} />
+          <Logo />
+        </div>
 
-      <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-        <div className="flex flex-1" />
-
-        <div className="flex items-center gap-x-4 lg:gap-x-6">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="relative">
-                <User className="h-5 w-5" />
-                <span className="sr-only">فتح قائمة المستخدم</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                تسجيل الخروج
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Right section */}
+        <div className="w-3/4 flex items-center justify-end gap-4">
+          <SearchBar />
+          <LanguageDropdown />
         </div>
       </div>
     </header>
   )
 }
+
+export default AdminHeader
