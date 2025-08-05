@@ -26,7 +26,7 @@ const SearchBar = () => {
       {/* Mobile search icon */}
       <div className="md:hidden">
         <button onClick={() => setIsMobileOpen(prev => !prev)} aria-label="Toggle search">
-          {isMobileOpen ? <X size={22} /> : <Search size={22} />}
+          {isMobileOpen ? <X size={22} /> : <Search size={18} />}
         </button>
       </div>
 
