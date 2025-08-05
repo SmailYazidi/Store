@@ -47,12 +47,19 @@ export default function AddProductPage() {
     const uploadedFilenames = await Promise.all(
       files.map(async (file) => {
         const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-        const res = await fetch(`/api/upload?filename=${filename}`, {
-          method: "POST",
-          body: file,
-        });
+            const res = await fetch(`/api/upload?filename=${filename}`, {
+            method: "POST",
+            body: file,
+            });
 
-        const data = await res.json();
+            if (!res.ok) {
+            console.error("Upload failed", await res.text());
+            return null;
+            }
+
+            const data = await res.json();
+
+       
 
         return data?.url ? data.url.split("/").pop() : null;
       })

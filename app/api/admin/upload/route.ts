@@ -9,11 +9,21 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Missing filename" }, { status: 400 });
   }
 
-  const blob = await put(filename, req.body!, {
-    access: "public",
-  });
+  try {
+    const blob = await put(filename, req.body!, {
+      access: "public",
+    });
 
-  const cleanFilename = blob.pathname.split("/").pop(); // get "1234567890-img.jpg"
+    const cleanFilename = blob.pathname.split("/").pop(); // get "1234567890-img.jpg"
 
-  return NextResponse.json({ filename: cleanFilename });
+    return NextResponse.json({ filename: cleanFilename });
+  } catch (err) {
+    console.error("Upload error:", err);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
+}
+
+// Optional: explicitly reject unsupported methods
+export function GET() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
