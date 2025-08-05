@@ -54,10 +54,10 @@ export default async function ProductPage({
         <div className="mb-6">
           <Link
             href="/"
-            className="flex items-center text-blue-700 hover:text-blue-900"
+            className="flex items-center text-dark hover:text-dark"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Store
+     {product.name.fr}
           </Link>
         </div>
 
@@ -73,7 +73,7 @@ export default async function ProductPage({
                 priority
               />
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2"> make <
               {product.images.map((image, index) => (
                 <div
                   key={index}
@@ -85,7 +85,7 @@ export default async function ProductPage({
                     fill
                     className="object-cover"
                   />
-                </div>
+                </div>> to scroll in image and if user clik on same image chang `/images/${product.mainImage}`} to be the user select image 
               ))}
             </div>
           </div>

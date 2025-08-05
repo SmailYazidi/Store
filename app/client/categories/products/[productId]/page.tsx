@@ -1,74 +1,50 @@
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { notFound } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
+import { ArrowLeft } from "lucide-react"
 
-interface LocalizedString {
-  ar: string;
-  fr: string;
-  en?: string;
-}
-
-interface Product {
-  _id: string;
-  name: LocalizedString;
-  description?: LocalizedString;
-  price: number;
-  currency: string;
-  images: string[];
-  mainImage: string;
-  categoryId: string;
-  isVisible: boolean;
-  quantity: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Category {
-  _id: string;
-  name: LocalizedString;
-  description?: LocalizedString;
-  createdAt: string;
-  updatedAt: string;
-}
-
-async function fetchCategory(productId: string): Promise<Category> {
+async function fetchCategory(productId: string) {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/client/categories/${productId}`,
     { cache: "no-store" }
-  );
-  if (!res.ok) throw new Error("فشل جلب بيانات التصنيف");
-  const response = await res.json();
+  )
+  if (!res.ok) throw new Error("فشل جلب بيانات التصنيف")
+  const response = await res.json()
   if (!response.success || !response.data) {
-    throw new Error("بيانات التصنيف غير صالحة");
+    throw new Error("بيانات التصنيف غير صالحة")
   }
-  return response.data;
+  return response.data
 }
 
-async function fetchProducts(productId: string): Promise<Product[]> {
+async function fetchProducts(productId: string) {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/client/categories/products/${productId}`,
     {
       cache: "no-store",
       next: { tags: ["products"] },
     }
-  );
-  if (!res.ok) throw new Error("فشل جلب المنتجات");
-  return res.json();
+  )
+  if (!res.ok) throw new Error("فشل جلب المنتجات")
+  return res.json()
 }
 
 export default async function ProductsPage({
   params,
 }: {
-  params: { productId: string };
+  params: { productId: string }
 }) {
   try {
     const [category, products] = await Promise.all([
       fetchCategory(params.productId),
       fetchProducts(params.productId),
-    ]);
+    ])
+
+    if (!Array.isArray(products)) {
+      throw new Error("المنتجات غير متوفرة أو غير صالحة")
+    }
 
     return (
-      <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8">
+      <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <Link
@@ -78,49 +54,47 @@ export default async function ProductsPage({
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-2xl font-bold">{category.name.ar}</h1>
+          <h1 className="text-2xl font-bold">{category.name.fr}</h1>
         </div>
 
         {/* Products Grid */}
         {products.length === 0 ? (
           <p className="text-gray-500">لا توجد منتجات في هذا التصنيف.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {products.map((product) => (
               <Link
                 key={product._id}
                 href={`/client/product/${product._id}`}
-                className="border rounded-xl shadow p-4 hover:shadow-md transition-shadow block hover:border-primary"
+                className="hover:scale-105 transition-transform"
               >
-                <div className="relative aspect-square overflow-hidden rounded-lg mb-2 bg-gray-100">
-                  {/* <img
-                    src={`${process.env.NEXT_PUBLIC_IMAGE_URL || ''}/images/${product.mainImage}`}
-                    alt={product.name.ar}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
-                    }}
-                  /> */}
+                <div className="bg-white rounded shadow p-3 text-center">
+                  <div className="w-full h-32 relative mb-2">
+                    <Image
+                      src={product.mainImage} // Use directly if it’s a full URL
+                      alt={product.name.fr}
+                      fill
+                      className="object-cover rounded"
+                    />
+                  </div>
+                  <p className="text-sm font-medium truncate">
+                    {product.name.fr}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {product.price} {product.currency}
+                  </p>
+                  {product.quantity <= 0 && (
+                    <p className="text-red-500 text-sm mt-1">نفذت الكمية</p>
+                  )}
                 </div>
-                <h2 className="text-lg font-semibold">{product.name.ar}</h2>
-                <p className="text-sm text-gray-500 line-clamp-2">
-                  {product.description?.ar ?? "لا يوجد وصف"}
-                </p>
-                <p className="mt-2 font-bold">
-                  {product.price.toLocaleString()} {product.currency}
-                </p>
-                {product.quantity <= 0 && (
-                  <p className="text-red-500 text-sm mt-1">نفذت الكمية</p>
-                )}
               </Link>
             ))}
           </div>
         )}
       </div>
-    );
+    )
   } catch (error) {
-    console.error("Error in ProductsPage:", error);
-    return notFound();
+    console.error("Error in ProductsPage:", error)
+    return notFound()
   }
 }
