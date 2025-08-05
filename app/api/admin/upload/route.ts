@@ -1,3 +1,4 @@
+// /app/api/upload/route.ts
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
@@ -14,16 +15,16 @@ export async function POST(req: Request): Promise<NextResponse> {
       access: "public",
     });
 
-    const cleanFilename = blob.pathname.split("/").pop(); // get "1234567890-img.jpg"
+    const cleanFilename = blob.pathname.split("/").pop();
 
     return NextResponse.json({ filename: cleanFilename });
-  } catch (err) {
-    console.error("Upload error:", err);
+  } catch (error) {
+    console.error("Upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }
 
-// Optional: explicitly reject unsupported methods
+// Optional: reject unsupported methods
 export function GET() {
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
