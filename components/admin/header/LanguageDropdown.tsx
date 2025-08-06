@@ -32,7 +32,7 @@ const LanguageDropdown = () => {
       <select
         value={language}
         onChange={handleChange}
-        className="bg-white text-black border border-black rounded px-2 py-1 focus:outline-none"
+        className="bg-white text-black  rounded px-2 py-1 focus:outline-none"
       >
         {reorderedLanguages.map((lang) => (
           <option key={lang} value={lang}>
