@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { connectDB } from "@/lib/mongodb";
-import { OrderStatus, IOrder } from "@/lib/models";
 import { ObjectId } from "mongodb";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-07-30.basil",
 });
+
+// Define local IOrder interface (partial)
+interface IOrder {
+  _id: ObjectId;
+  productName: string;
+  productPrice: number;
+  productCurrency?: string;
+  quantity: number;
+}
 
 export async function POST(req: NextRequest) {
   try {

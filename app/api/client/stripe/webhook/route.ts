@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { connectDB } from "@/lib/mongodb";
-import { OrderStatus } from "@/lib/models";
 import { ObjectId } from "mongodb";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -15,6 +14,19 @@ export const config = {
     bodyParser: false,
   },
 };
+
+// Define OrderStatus enum locally
+enum OrderStatus {
+  PENDING = "pending",
+  VERIFIED = "verified",
+  PAID = "paid",
+  SHIPPED = "shipped",
+  DELIVERED = "delivered",
+  REJECTED = "rejected",
+  PAYMENT_PENDING = "payment_pending",
+  CONFIRMED = "confirmed",
+  PROCESSING = "processing",
+}
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();

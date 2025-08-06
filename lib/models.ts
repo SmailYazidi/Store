@@ -1,5 +1,4 @@
 // lib/models.ts
-import { ObjectId } from "mongodb";
 
 // Shared types
 export type LocalizedString = {
@@ -15,13 +14,13 @@ export interface Timestamped {
 
 // Category
 export interface Category extends Timestamped {
-  _id?: ObjectId;
+  _id?: string; // was ObjectId
   name: LocalizedString;
 }
 
 // Product
 export interface Product extends Timestamped {
-  _id?: ObjectId;
+  _id?: string; // was ObjectId
   name: LocalizedString;
   description: LocalizedString;
   price: number;
@@ -51,7 +50,7 @@ export type PaymentMethod = "card" | "cash" | "paypal" | null;
 
 // Order Interface
 export interface IOrder extends Timestamped {
-  _id?: ObjectId;
+  _id?: string; // was ObjectId
   orderCode: string;
   customerName: string;
   customerPhone: string;
@@ -74,6 +73,6 @@ export interface IOrder extends Timestamped {
 
 // Admin password
 export interface AdminPassword extends Timestamped {
-  _id?: ObjectId;
+  _id?: string; // was ObjectId
   passwordHash: string;
 }
