@@ -61,10 +61,6 @@ export default function ProductPage() {
   if (error) return notFound();
   if (!product) return <Loading />;
 
-  const whatsappMessage = `Hello, I am interested in purchasing ${product.name.en || product.name.fr || product.name.ar} (${product.price} ${product.currency})`;
-  const whatsappLink = `https://wa.me/212719270155?text=${encodeURIComponent(
-    whatsappMessage
-  )}`;
 
   const scrollThumbnails = (direction: "left" | "right") => {
     const container = thumbnailsRef.current;
@@ -159,21 +155,13 @@ export default function ProductPage() {
           </div>
 
           <div className="flex flex-col space-y-4 mb-8">
-            <Link
-              href={whatsappLink}
-              target="_blank"
-              className="bg-green-700 hover:bg-green-800 text-white py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
-            >
-              <MessageCircle className="w-5 h-5" />
-              Buy via WhatsApp
-            </Link>
-
+      
             <Link
               href={`/client/order-form/${product._id}`}
               className="bg-blue-700 hover:bg-blue-800 text-white py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
             >
               <ShoppingCart className="w-5 h-5" />
-              Buy on Website
+              Buy
             </Link>
           </div>
 

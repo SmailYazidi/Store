@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Loading from '@/components/Loading';
 
 interface LocalizedString {
   ar: string;
@@ -59,7 +60,7 @@ export default function OrderSuccessPage({ params }: { params: { order_id: strin
     }
   }, [order, router]);
 
-  if (loading) return <p>Loading order info...</p>;
+  if (loading) return <Loading/>;
   if (error) return <p>Error loading order: {error}</p>;
   if (!order) return <p>No order found.</p>;
 
