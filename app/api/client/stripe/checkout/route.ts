@@ -1,3 +1,5 @@
+// /api/client/stripe/checkout/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { connectDB } from "@/lib/mongodb";
@@ -10,7 +12,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // Define local IOrder interface (partial)
 interface IOrder {
   _id: ObjectId;
-  productName: string;
+  productName: {
+    fr: string;
+    ar?: string;
+    en?: string;
+  };
   productPrice: number;
   productCurrency?: string;
   quantity: number;
@@ -35,7 +41,7 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: order.productCurrency || "usd",
             product_data: {
-              name: order.productName,
+              name: order.productName.fr || "Produit",
             },
             unit_amount: Math.round(order.productPrice * 100),
           },
