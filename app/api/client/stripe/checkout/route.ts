@@ -33,27 +33,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "payment",
-      line_items: [
-        {
-          price_data: {
-            currency: order.productCurrency || "usd",
-            product_data: {
-              name: order.productName.fr || "Produit",
-            },
-            unit_amount: Math.round(order.productPrice * 100),
-          },
-          quantity: order.quantity,
+  const session = await stripe.checkout.sessions.create({
+  payment_method_types: ["card"],
+  mode: "payment",
+  line_items: [
+    {
+      price_data: {
+        currency: order.productCurrency || "usd",
+        product_data: {
+          name: order.productName.fr || "Produit",
         },
-      ],
-      metadata: {
-        orderId: order._id.toString(),
+        unit_amount: Math.round(order.productPrice * 100),
       },
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/client/order-success/${order._id}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/client/payment/${order._id}`,
-    });
+      quantity: order.quantity || 1, // ✅ مهم: خارج price_data
+    },
+  ],
+  metadata: {
+    orderId: order._id.toString(),
+  },
+  success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/client/order-success/${order._id}`,
+  cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/client/payment/${order._id}`,
+});
+
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
