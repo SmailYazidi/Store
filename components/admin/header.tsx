@@ -21,7 +21,6 @@ const AdminHeader = ({ onMenuClick }: ClientHeaderProps) => {
 
         {/* Right section */}
         <div className="w-3/4 flex items-center justify-end gap-4">
-          <SearchBar />
           <LanguageDropdown />
         </div>
       </div>

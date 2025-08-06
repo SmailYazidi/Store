@@ -1,21 +1,57 @@
+
 "use client"
 
 import { sidebarAdminItems } from "@/constant/constants"
 import Link from "next/link"
 import Logo from "./header/Logo"
 import { X } from "lucide-react"
+import React from "react"
+import {
+  Home,
+  Package,
+  Phone,
+  LayoutDashboard,
+  Box,
+  Tag,
+  ShoppingCart,
+  Settings,
+} from "lucide-react"
 
-interface ClientSidebarProps {
+interface AdminSidebarProps {
   onClose: () => void
 }
 
-const AdminSidebar = ({ onClose }: ClientSidebarProps) => {
+const iconMap: Record<string, React.ReactNode> = {
+  home: <Home size={18} />,
+  package: <Package size={18} />,
+  phone: <Phone size={18} />,
+  dashboard: <LayoutDashboard size={18} />,
+  box: <Box size={18} />,
+  tag: <Tag size={18} />,
+  "shopping-cart": <ShoppingCart size={18} />,
+  settings: <Settings size={18} />,
+}
+
+const AdminSidebar = ({ onClose }: AdminSidebarProps) => {
   return (
-    <aside className="fixed  top-0 left-0 h-full w-64 bg-white border-r border-black z-50">
+    <aside className="fixed top-0 left-0 h-full w-64 bg-white z-50">
       {/* Logo section with close button */}
-      <div className="flex items-center justify-between p-4 border-b border-black">
-        <Logo />
-        <button onClick={onClose} aria-label="Close sidebar" className="text-black">
+      <div className="flex items-center justify-between p-4">
+        {/* Left section with Home icon and Logo */}
+        <div className="flex items-center gap-2">
+          <Link href="/admin">
+            <Home size={18} className="text-black" /> </Link>
+          <Logo />
+          <Link href="/admin">
+          </Link>
+        </div>
+
+        {/* Close button on the right */}
+        <button
+          onClick={onClose}
+          aria-label="Close sidebar"
+          className="text-black"
+        >
           <X size={20} />
         </button>
       </div>
@@ -27,15 +63,21 @@ const AdminSidebar = ({ onClose }: ClientSidebarProps) => {
             <Link
               key={item.route}
               href={item.route}
-              className="block px-4 py-2 text-black hover:bg-black hover:text-white rounded"
+              className="flex items-center gap-2 px-4 py-2 text-black hover:bg-black hover:text-white rounded"
             >
-              {item.label}
+              {iconMap[item.icon]}
+              <span>{item.label}</span>
             </Link>
           ) : null
         )}
       </nav>
     </aside>
-  )
+  ) // ✅ ← This was missing
 }
 
 export default AdminSidebar
+
+
+
+
+

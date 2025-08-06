@@ -4,6 +4,9 @@ import { useEffect, useState } from "react"
 import { ShoppingCart, Package, FolderOpen, DollarSign, TrendingUp, Loader2 } from "lucide-react"
 import Link from "next/link"
 import Loading from '@/components/Loading';
+
+
+
 interface DashboardStats {
   totalOrders: number
   totalProducts: number
@@ -65,7 +68,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-     <Loading />
+      <Loading />
     )
   }
 

@@ -1,7 +1,14 @@
+
+"use client";
+
 import Link from "next/link";
 import { Mail, MessageCircle, ArrowLeft } from "lucide-react";
-
+import { useLanguage } from "@/context/LanguageContext";
+import { translations } from "@/constant/lang";
 export default function ContactPage() {
+const lang = useLanguage();
+const t = translations[lang as "en" | "fr" | "ar"];
+
   return (
     <div className="min-h-screen bg-white text-gray-900 flex items-center justify-center px-4 py-12 relative">
       {/* Go Back Button */}
@@ -10,12 +17,12 @@ export default function ContactPage() {
         className="absolute top-6 left-4 flex items-center gap-2 text-gray-700 hover:text-gray-900 text-sm sm:text-base transition"
       >
         <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-        Back
+        {t.back}
       </Link>
 
       <div className="w-full max-w-md flex flex-col items-center">
         <h1 className="text-3xl sm:text-4xl font-bold text-center mb-8">
-          Contact Us
+          {t.contactUs}
         </h1>
 
         <div className="flex flex-col gap-6 w-full">
@@ -27,7 +34,7 @@ export default function ContactPage() {
           >
             <div className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
-              <span className="font-medium">WhatsApp</span>
+              <span className="font-medium">{t.whatsapp}</span>
             </div>
             <span className="text-sm break-all sm:text-base">+212 719 270 155</span>
           </Link>
@@ -39,7 +46,7 @@ export default function ContactPage() {
           >
             <div className="flex items-center gap-2">
               <Mail className="w-5 h-5" />
-              <span className="font-medium">Email</span>
+              <span className="font-medium">{t.email}</span>
             </div>
             <span className="text-sm break-all sm:text-base">smail.yazidi.contact@gmail.com</span>
           </Link>
