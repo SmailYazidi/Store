@@ -2,6 +2,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { connectDB } from "@/lib/mongodb";
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY!); // تأكد من وجود المفتاح في env
+
+async function sendVerificationEmail(to: string, code: string, orderCode: string) {
+  try {
+    await resend.emails.send({
+      from:'onboarding@resend.dev', 
+      to,
+      subject: 'كود التحقق من طلبك',
+      html: `
+        <div style="direction: rtl; font-family: Arial, sans-serif;">
+          <h2>مرحباً ${to} 👋</h2>
+          <p>شكراً لطلبك من متجرنا!</p>
+          <p>كود التحقق الخاص بك هو:</p>
+          <h1 style="letter-spacing: 3px;">${code}</h1>
+          <p>كود الطلب الخاص بك: <strong>${orderCode}</strong></p>
+          <p>يرجى إدخال الكود في صفحة التحقق لإتمام عملية الدفع.</p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("فشل إرسال البريد:", error);
+  }
+}
 
 enum OrderStatus {
   PENDING = "pending",
@@ -73,7 +98,7 @@ export async function POST(req: NextRequest) {
       { _id: productObjectId },
       { $inc: { quantity: -1 } }
     );
-
+await sendVerificationEmail(email, verificationCode, orderCode);
     return NextResponse.json(
       {
         message: "Order created successfully",
