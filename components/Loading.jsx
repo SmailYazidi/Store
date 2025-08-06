@@ -20,7 +20,7 @@ export default function Loading() {
         .loading-dots span {
           width: 8px;
           height: 8px;
-          background-color: #2563eb; /* blue color */
+          background-color:rgb(0, 0, 0); /* blue color */
           border-radius: 50%;
           animation: bounce 1s infinite ease-in-out both;
         }

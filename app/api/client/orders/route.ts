@@ -28,7 +28,7 @@ async function sendVerificationEmail(to: string, code: string, orderCode: string
     </div>
 
     <p style="margin-top: 30px;">Veuillez copier ces codes et les utiliser sur la page de vérification pour finaliser votre commande.</p>
-  </div>
+  </div> 
       `,
     });
   } catch (error) {
@@ -44,7 +44,7 @@ enum OrderStatus {
   DELIVERED = "delivered",
 }
 
-type PaymentMethod = "card" | "cash_on_delivery";
+type PaymentMethod = "card";
 
 const generateVerificationCode = () =>
   Math.floor(100000 + Math.random() * 900000).toString();

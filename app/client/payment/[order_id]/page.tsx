@@ -35,33 +35,27 @@ export default function PaymentPage({ params }: { params: { order_id: string } }
     fetchOrder();
   }, [params.order_id, router]);
 
-  const handleCashOnDelivery = async () => {
-    if (!order) return;
+const handlepay = async () => {
+  if (!order) return;
 
-    try {
-      const response = await fetch(`/api/client/orders/${order._id}/change-payment-method`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          paymentMethod: "cash_on_delivery",
-          paymentStatus: "pending",
-        }),
-      });
+  const response = await fetch("/api/client/stripe/checkout", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ orderId: order._id }),
+  });
 
-      const data = await response.json();
+  const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to update payment method");
-      }
+  if (data.url) {
+    window.location.href = data.url; // توجه المستخدم إلى Stripe Checkout
+  } else {
+    alert("حدث خطأ أثناء إنشاء جلسة الدفع");
+  }
+};
 
-      router.push(`/client/order-success/${order._id}`);
-    } catch (err: any) {
-      console.error("Payment error:", err);
-      setError(err.message || "Error processing payment");
-    }
-  };
+
 
   if (isLoading)
     return (
@@ -92,10 +86,10 @@ export default function PaymentPage({ params }: { params: { order_id: string } }
         </div>
 
         <button
-          onClick={handleCashOnDelivery}
+          onClick={handlepay}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium"
         >
-          الدفع عند الاستلام (Cash on Delivery)
+      pay
         </button>
       </div>
     </div>
