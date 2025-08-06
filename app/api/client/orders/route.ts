@@ -6,21 +6,29 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY!); // تأكد من وجود المفتاح في env
 
-async function sendVerificationEmail(to: string, code: string, orderCode: string) {
+async function sendVerificationEmail(to: string, code: string, orderCode: string,customerName:string) {
   try {
     await resend.emails.send({
       from:'onboarding@resend.dev', 
       to,
       subject: 'كود التحقق من طلبك',
       html: `
-        <div style="direction: rtl; font-family: Arial, sans-serif;">
-          <h2>مرحباً ${to} 👋</h2>
-          <p>شكراً لطلبك من متجرنا!</p>
-          <p>كود التحقق الخاص بك هو:</p>
-          <h1 style="letter-spacing: 3px;">${code}</h1>
-          <p>كود الطلب الخاص بك: <strong>${orderCode}</strong></p>
-          <p>يرجى إدخال الكود في صفحة التحقق لإتمام عملية الدفع.</p>
-        </div>
+      <div style="direction: ltr; font-family: Arial, sans-serif;">
+    <h2>Bonjour ${customerName} 👋</h2>
+    <p>Merci pour votre commande dans notre boutique !</p>
+
+    <p>Votre code de vérification est :</p>
+    <div style="padding: 10px; font-size: 18px; background: #f0f0f0; display: inline-block; letter-spacing: 2px;">
+      ${code}
+    </div>
+
+    <p style="margin-top: 20px;">Votre numéro de commande :</p>
+    <div style="padding: 10px; font-size: 18px; background: #f0f0f0; display: inline-block;">
+      ${orderCode}
+    </div>
+
+    <p style="margin-top: 30px;">Veuillez copier ces codes et les utiliser sur la page de vérification pour finaliser votre commande.</p>
+  </div>
       `,
     });
   } catch (error) {
@@ -98,7 +106,7 @@ export async function POST(req: NextRequest) {
       { _id: productObjectId },
       { $inc: { quantity: -1 } }
     );
-await sendVerificationEmail(email, verificationCode, orderCode);
+await sendVerificationEmail(email, verificationCode, orderCode,name);
     return NextResponse.json(
       {
         message: "Order created successfully",
