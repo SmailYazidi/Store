@@ -38,7 +38,7 @@ const ClientSidebar = ({ onClose }: ClientSidebarProps) => {
     <aside className="fixed top-0 left-0 h-full w-64 bg-white z-50">
       {/* Logo section with close button */}
       
-<div className="flex items-center justify-between p-4 border-b border-black">
+<div className="flex items-center justify-between p-4 ">
   {/* Left section with Home icon and Logo */}
   <div className="flex items-center gap-2">
           <Link href="/">
@@ -55,7 +55,7 @@ const ClientSidebar = ({ onClose }: ClientSidebarProps) => {
   >
     <X size={20} />
   </button>
-</div>
+      </div>
       {/* Navigation items */}
       <nav className="p-4 space-y-2">
         {clientSidebarItems.map((item) =>
