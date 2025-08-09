@@ -73,7 +73,8 @@ export default function ProductPage() {
   const allImages = [product.mainImage, ...product.images.filter(img => img !== product.mainImage)];
 
   return (
-    <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8">
+          <div className="bg-white text-gray-900 w-full min-h-screen">
+      <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8 max-w-7xl mx-auto">
   
            <div className="flex items-center gap-4 mb-6">
           <Link
@@ -189,6 +190,6 @@ export default function ProductPage() {
           </div>
         </div>
       </div>
-    </div>
+    </div></div>
   );
 }

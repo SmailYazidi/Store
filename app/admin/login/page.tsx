@@ -1,15 +1,13 @@
-
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminSidebar from "@/components/admin/sidebar"
-import AdminHeader from "@/components/admin/header"
+
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -21,7 +19,7 @@ export default function AdminLoginPage() {
     });
 
     if (res.ok) {
-      console.log("login sucses")
+      console.log("login success");
       router.push('/admin');
     } else {
       const text = await res.text();
@@ -29,47 +27,30 @@ export default function AdminLoginPage() {
     }
   }
 
-  return (   <div className="relative min-h-screen flex flex-col">
-
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-90">
-          {isSidebarOpen && <AdminSidebar onClose={() => setIsSidebarOpen(false)} />}
-
-   <div
-            className="fixed inset-0 bg-black opacity-50"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        </div>
-      )}
-
-
-      <div className="flex-1 flex flex-col">
-        <AdminHeader onMenuClick={() => setIsSidebarOpen(prev => !prev)} />
-
-
-
-          <main className="p-4 pt-25 bg-white text-black min-h-screen">
-<div className="mb-10 max-w-7xl mx-auto">
-    <div style={{ maxWidth: 400, margin: 'auto', padding: 20 }}>
-      <h1>تسجيل دخول المسؤول</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          كلمة المرور:
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-          />
-        </label>
-        <br />
-        <button type="submit">تسجيل دخول</button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-      </form>
-    </div></div>
-    </main>
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white text-gray-900">
+      <div className="w-full max-w-sm bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+        <h1 className="text-xl font-bold mb-6 text-center">تسجيل دخول المسؤول</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1 text-sm font-medium">كلمة المرور:</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className="w-full px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            />
+          </div>
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+          <button
+            type="submit"
+            className="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium py-2 rounded transition-colors"
+          >
+            تسجيل دخول
+          </button>
+        </form>
       </div>
     </div>
   );
 }
-
