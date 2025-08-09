@@ -10,20 +10,18 @@ const lang = useLanguage();
 const t = translations[lang as "en" | "fr" | "ar"];
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex items-center justify-center px-4 py-12 relative">
-      {/* Go Back Button */}
-      <Link
-        href="/"
-        className="absolute top-6 left-4 flex items-center gap-2 text-gray-700 hover:text-gray-900 text-sm sm:text-base transition"
-      >
-        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-        {t.back}
-      </Link>
+         <div className="bg-white text-gray-900 w-full min-h-screen">
+      <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8 max-w-7xl mx-auto">
+                <div className="flex items-center gap-4 mb-6">
+          <Link
+            href={`/`}
+            className="p-2 rounded-full hover:bg-gray-100"
 
-      <div className="w-full max-w-md flex flex-col items-center">
-        <h1 className="text-3xl sm:text-4xl font-bold text-center mb-8">
-          {t.contactUs}
-        </h1>
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-2xl font-bold">{t.contactUs}</h1>
+        </div>
 
         <div className="flex flex-col gap-6 w-full">
           {/* WhatsApp */}
@@ -52,6 +50,6 @@ const t = translations[lang as "en" | "fr" | "ar"];
           </Link>
         </div>
       </div>
-    </div>
+    </div>    </div>
   );
 }
