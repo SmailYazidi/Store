@@ -34,7 +34,7 @@ const t = translations[lang as "en" | "fr" | "ar"];
               <MessageCircle className="w-5 h-5" />
               <span className="font-medium">{t.whatsapp}</span>
             </div>
-            <span className="text-sm break-all sm:text-base">+212 719 270 155</span>
+        
           </Link>
 
           {/* Email */}
@@ -46,7 +46,7 @@ const t = translations[lang as "en" | "fr" | "ar"];
               <Mail className="w-5 h-5" />
               <span className="font-medium">{t.email}</span>
             </div>
-            <span className="text-sm break-all sm:text-base">smail.yazidi.contact@gmail.com</span>
+
           </Link>
         </div>
       </div>
