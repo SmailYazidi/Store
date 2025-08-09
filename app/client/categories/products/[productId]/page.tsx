@@ -44,6 +44,7 @@ export default async function ProductsPage({
     }
 
     return (
+         <div className="bg-white text-gray-900 w-full min-h-screen">
       <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
@@ -91,7 +92,7 @@ export default async function ProductsPage({
             ))}
           </div>
         )}
-      </div>
+      </div></div>
     )
   } catch (error) {
     console.error("Error in ProductsPage:", error)

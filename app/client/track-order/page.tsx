@@ -59,7 +59,7 @@ export default function TrackOrderPage() {
           type="text"
           value={orderCode}
           onChange={(e) => setOrderCode(e.target.value)}
-          placeholder="Enter Order Code (e.g. #ORD-7775)"
+          placeholder="Enter Order Code "
           className="border border-gray-700 rounded-md p-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-700"
         />
         <button

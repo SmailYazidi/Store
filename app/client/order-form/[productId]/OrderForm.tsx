@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Loading from '@/components/Loading';
+import {ArrowLeft} from "lucide-react";
+import Link from "next/link"
 interface LocalizedString {
   ar: string;
   fr: string;
@@ -73,10 +75,19 @@ export default function OrderForm({ productId }: { productId: string }) {
   return (
     <div className="bg-white text-gray-900 min-h-screen w-full flex flex-col items-center px-4 py-8">
       <div className="w-full max-w-xl">
-        <h1 className="text-2xl font-bold mb-6">Complete Order</h1>
+            <div className="flex items-center gap-4 mb-6">
+          <Link
+            href={`/client/product/${product._id}`}
+            className="p-2 rounded-full hover:bg-gray-100"
+
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-2xl font-bold">Complete Order</h1>
+        </div>
         <div className="mb-6 p-4 bg-white rounded-md">
           <h2 className="font-semibold mb-2">Product</h2>
-          <p className="text-lg">{product.name.ar}</p>
+          <p className="text-lg">{product.name.fr}</p>
           <p className="font-bold">
             {product.price.toLocaleString()} {product.currency}
           </p>

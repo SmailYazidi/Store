@@ -74,25 +74,31 @@ export default function ProductPage() {
 
   return (
     <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8">
-      <div className="mb-6">
-        <Link href="/" className="flex items-center text-dark hover:text-dark">
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          {product.name.fr}
-        </Link>
-      </div>
+  
+           <div className="flex items-center gap-4 mb-6">
+          <Link
+            href={`/`}
+            className="p-2 rounded-full hover:bg-gray-100"
 
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-2xl font-bold"> {product.name.fr}</h1>
+        </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product Images */}
         <div>
-          <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 mb-4">
-            <Image
-             src={`${process.env.NEXT_PUBLIC_BLOB_BASE_URL}${product.mainImage}`}
-              alt={product.name.en || product.name.fr || "Product image"}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
+        {/* Product Images */}
+  <div className="relative mx-auto w-55 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-lg overflow-hidden bg-gray-100 mb-4">
+    <Image
+      src={`${process.env.NEXT_PUBLIC_BLOB_BASE_URL}${product.mainImage}`}
+      alt={product.name.en || product.name.fr || "Product image"}
+      fill
+      className="object-cover"
+      priority
+    />
+  </div>
+
 
           {/* Thumbnails with horizontal scroll and arrows */}
           <div className="relative">
@@ -154,24 +160,21 @@ export default function ProductPage() {
             )}
           </div>
 
-          <div className="flex flex-col space-y-4 mb-8">
-      
-            <Link
-              href={`/client/order-form/${product._id}`}
-              className="bg-blue-700 hover:bg-blue-800 text-white py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              Buy
-            </Link>
-          </div>
+       <div className="flex flex-col space-y-4 mb-8">
+  <Link
+    href={`/client/order-form/${product._id}`}
+    className="bg-red-700 hover:bg-red-800 text-white py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+  >
+    <ShoppingCart className="w-5 h-5" />
+    Buy
+  </Link>
+</div>
+
 
           <div className="border-t pt-4">
             <h2 className="font-semibold mb-2">Additional Information</h2>
             <div className="grid grid-cols-2 gap-4 text-sm text-gray-700">
-              <div>
-                <p className="font-medium">Product ID</p>
-                <p>{product._id}</p>
-              </div>
+          
               <div>
                 <p className="font-medium">Date Added</p>
                 <p>
