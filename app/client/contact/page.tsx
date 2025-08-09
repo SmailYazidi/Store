@@ -50,6 +50,6 @@ const t = translations[lang as "en" | "fr" | "ar"];
           </Link>
         </div>
       </div>
-    </div>    </div>
+    </div>    
   );
 }
