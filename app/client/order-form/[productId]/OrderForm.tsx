@@ -88,7 +88,11 @@ export default function OrderForm({ productId }: { productId: string }) {
 
     <div className="mb-6 p-4 bg-white rounded-md border border-gray-300">
       <h2 className="font-semibold mb-2">Product</h2>
-         src={`${process.env.NEXT_PUBLIC_BLOB_BASE_URL}${product.mainImage}`}
+      <img
+           src={`${process.env.NEXT_PUBLIC_BLOB_BASE_URL}${product.mainImage}`}
+        alt={"Product"}
+        className="w-24 h-24 object-cover rounded"
+      />
       <p className="text-lg">{product.name.fr}</p>
       <p className="font-bold">
         {product.price.toLocaleString()} {product.currency}
