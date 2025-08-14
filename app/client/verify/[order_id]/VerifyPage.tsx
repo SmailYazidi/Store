@@ -37,36 +37,39 @@ export default function VerifyPage({ orderId }: { orderId: string }) {
 
   return (
     <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8 flex items-center justify-center">
-      <div className="w-full max-w-md bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold mb-4 text-center">تأكيد الطلب</h1>
-        <p className="mb-6 text-center text-gray-600">
-          لقد أرسلنا رمز التحقق إلى بريدك الإلكتروني. يرجى إدخاله أدناه:
-        </p>
+  <div className="w-full max-w-md bg-white rounded-lg shadow p-6 border border-gray-300">
+    <h1 className="text-2xl font-bold mb-4 text-center">Confirm Order</h1>
+    <p className="mb-6 text-center text-gray-600">
+      We have sent a verification code to your email. Please enter it below:
+    </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="أدخل رمز التحقق"
-            className="w-full px-4 py-2 border rounded-lg text-center text-lg"
-            maxLength={6}
-            required
-          />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <input
+        type="text"
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        placeholder="Enter verification code"
+        className="w-full px-4 py-2 border border-gray-800 rounded text-center text-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800"
+        maxLength={6}
+        required
+      />
 
-          {error && <p className="text-red-500 text-center">{error}</p>}
+      {error && <p className="text-red-500 text-center">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full py-3 px-6 rounded-lg font-medium text-white ${
-              isLoading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {isLoading ? 'جاري التحقق...' : 'تأكيد الطلب'}
-          </button>
-        </form>
-      </div>
-    </div>
+      <button
+        type="submit"
+        disabled={isLoading}
+        className={`w-full py-3 px-6 rounded font-medium text-white transition-colors ${
+          isLoading
+            ? 'bg-gray-500 cursor-not-allowed'
+            : 'bg-gray-900 hover:bg-gray-800'
+        }`}
+      >
+        {isLoading ? 'Verifying...' : 'Confirm Order'}
+      </button>
+    </form>
+  </div>
+</div>
+
   );
 }

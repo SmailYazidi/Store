@@ -176,12 +176,12 @@ export default function ProductPage() {
             <h2 className="font-semibold mb-2">Additional Information</h2>
             <div className="grid grid-cols-2 gap-4 text-sm text-gray-700">
           
-              <div>
+            {/*   <div>
                 <p className="font-medium">Date Added</p>
                 <p>
                   {new Date(product.createdAt).toLocaleDateString("en-US")}
                 </p>
-              </div>
+              </div> */}
               <div>
                 <p className="font-medium">Available Quantity</p>
                 <p>{product.quantity}</p>
