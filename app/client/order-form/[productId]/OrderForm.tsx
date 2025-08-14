@@ -15,6 +15,7 @@ interface Product {
   price: number;
   currency: string;
   quantity: number;
+    mainImage: string
 }
 
 export default function OrderForm({ productId }: { productId: string }) {
@@ -87,6 +88,7 @@ export default function OrderForm({ productId }: { productId: string }) {
 
     <div className="mb-6 p-4 bg-white rounded-md border border-gray-300">
       <h2 className="font-semibold mb-2">Product</h2>
+         src={`${process.env.NEXT_PUBLIC_BLOB_BASE_URL}${product.mainImage}`}
       <p className="text-lg">{product.name.fr}</p>
       <p className="font-bold">
         {product.price.toLocaleString()} {product.currency}
