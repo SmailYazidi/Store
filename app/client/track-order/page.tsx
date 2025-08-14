@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-
+import Link from "next/link"
 export default function TrackOrderPage() {
   const [orderCode, setOrderCode] = useState("");
   const [order, setOrder] = useState<any>(null);
@@ -40,19 +40,19 @@ export default function TrackOrderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col items-center p-6 w-full">
-      {/* Arrow Left */}
-      <div className="w-full max-w-md mb-4 flex items-center">
-        <button
-          onClick={() => router.back()}
-          className="text-gray-800 hover:text-gray-600 flex items-center"
-        >
-          <ArrowLeft className="mr-2" />
-          Back
-        </button>
-      </div>
+     <div className="bg-white text-gray-900 min-h-screen w-full flex flex-col items-center px-4 py-8">
+  <div className="w-full max-w-xl">
+    <div className="flex items-center gap-4 mb-6">
+      <Link
+        href={`/`}
+        className="p-2 rounded-full hover:bg-gray-200"
+      >
+        <ArrowLeft className="w-5 h-5" />
+      </Link>
+      <h1 className="text-2xl font-bold">Track Your Order</h1>
+    </div>
 
-      <h1 className="text-3xl font-bold mb-6">Track Your Order</h1>
+    
 
       <form onSubmit={handleTrack} className="w-full max-w-md flex flex-col gap-4 mb-6">
         <input
@@ -82,6 +82,6 @@ export default function TrackOrderPage() {
           <p><strong>Payment Status:</strong> {order.paymentStatus}</p>
         </div>
       )}
-    </div>
+    </div>   </div>
   );
 }
