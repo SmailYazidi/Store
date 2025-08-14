@@ -107,7 +107,7 @@ export default function TrackOrderPage() {
               <strong>Payment Status:</strong> {order.paymentStatus}
             </p>
 
-           {/* Conditional buttons */}
+{/* Conditional buttons */}
 {!order.isVerified && (
   <Link
     href={`/client/verify/${order._id}`}
@@ -117,7 +117,7 @@ export default function TrackOrderPage() {
   </Link>
 )}
 
-{order.isVerified && order.paymentStatus !== "Paid" && (
+{order.isVerified && order.paymentStatus.toLowerCase() !== "paid" && (
   <Link
     href={`/client/payment/${order._id}`}
     className="block w-full mt-4 bg-gray-900 hover:bg-gray-800 text-white py-3 px-6 rounded-lg text-center font-medium transition"
@@ -125,6 +125,16 @@ export default function TrackOrderPage() {
     Proceed to Payment
   </Link>
 )}
+
+{order.isVerified && order.paymentStatus.toLowerCase() === "paid" && (
+  <button
+    disabled
+    className="block w-full mt-4 bg-green-500 text-white py-3 px-6 rounded-lg text-center font-medium cursor-not-allowed"
+  >
+    Payment Completed
+  </button>
+)}
+
 
           </div>
         )}
