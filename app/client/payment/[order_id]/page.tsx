@@ -70,12 +70,17 @@ const handlepay = async () => {
     );
 
   return (
- <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8 flex items-center justify-center">
-  <div className="w-full max-w-2xl bg-white rounded-lg shadow p-6 border border-gray-300">
+ <div className="bg-white text-gray-900 min-h-screen w-full flex flex-col items-center px-4 py-8">
+      <div className="w-full max-w-xl">
     <h1 className="text-2xl font-bold mb-6">Complete Payment</h1>
-
+<br />
     <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-300">
       <h2 className="font-semibold mb-2">Order Details</h2>
+          <img
+           src={`${process.env.NEXT_PUBLIC_BLOB_BASE_URL}${order.productImage}`}
+        alt={order.productName.fr || order.productName.fr || "Product"}
+        className="w-24 h-24 object-cover rounded"
+      />
       <p>Order ID: {order._id}</p>
       <p>Product: {order.productName?.fr || "N/A"}</p>
       <p className="text-xl font-bold mt-2">
