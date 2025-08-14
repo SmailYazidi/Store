@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
+import Loading from '@/components/Loading';
 export default function PaymentPage({ params }: { params: { order_id: string } }) {
   const [order, setOrder] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,9 +59,7 @@ const handlepay = async () => {
 
   if (isLoading)
     return (
-      <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8 flex items-center justify-center text-center">
-        <p>جاري التحميل...</p>
-      </div>
+  <Loading/>
     );
 
   if (error)
@@ -72,26 +70,28 @@ const handlepay = async () => {
     );
 
   return (
-    <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8 flex items-center justify-center">
-      <div className="w-full max-w-2xl bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold mb-6">إتمام الدفع</h1>
+ <div className="bg-white text-gray-900 w-full min-h-screen px-4 py-8 flex items-center justify-center">
+  <div className="w-full max-w-2xl bg-white rounded-lg shadow p-6 border border-gray-300">
+    <h1 className="text-2xl font-bold mb-6">Complete Payment</h1>
 
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h2 className="font-semibold mb-2">تفاصيل الطلب</h2>
-          <p>رقم الطلب: {order._id}</p>
-          <p>المنتج: {order.productName?.ar || "N/A"}</p>
-          <p className="text-xl font-bold mt-2">
-            المبلغ: {order.productPrice} {order.currency}
-          </p>
-        </div>
-
-        <button
-          onClick={handlepay}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium"
-        >
-      pay
-        </button>
-      </div>
+    <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-300">
+      <h2 className="font-semibold mb-2">Order Details</h2>
+      <p>Order ID: {order._id}</p>
+      <p>Product: {order.productName?.fr || "N/A"}</p>
+      <p className="text-xl font-bold mt-2">
+        Amount: {order.productPrice} {order.currency}
+      </p>
     </div>
+
+    <button
+      onClick={handlepay}
+      className="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 px-6 rounded font-medium transition-colors"
+    >
+      Pay Now
+    </button>
+  </div>
+</div>
+
+
   );
 }
