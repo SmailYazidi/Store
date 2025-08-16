@@ -24,5 +24,5 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }
-
+//d
 export const dynamic = 'force-dynamic';
